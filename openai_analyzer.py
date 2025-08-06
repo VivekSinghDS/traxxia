@@ -402,55 +402,68 @@ Answers: {answers}
 
 Create a full SWOT portfolio and return it in the following JSON format:
 {{
-    "swotPortfolio": {{
-        "internalAnalysis": {{
-            "strengths": [
-                {{
-                    "factor": "Strong brand recognition",
-                    "description": "Detailed description of the strength",
-                    "impact": "high",
-                    "sustainability": "long-term",
-                    "leveragePotential": "high"
-                }}
-            ],
-            "weaknesses": [
-                {{
-                    "factor": "Limited automation",
-                    "description": "Detailed description of the weakness",
-                    "impact": "medium",
-                    "urgency": "medium",
-                    "improvementPotential": "high"
-                }}
-            ]
-        }},
-        "externalAnalysis": {{
-            "opportunities": [
-                {{
-                    "factor": "Growing market demand",
-                    "description": "Detailed description of the opportunity",
-                    "probability": "high",
-                    "timeframe": "short-term",
-                    "resourceRequirements": "medium"
-                }}
-            ],
-            "threats": [
-                {{
-                    "factor": "New competitor entry",
-                    "description": "Detailed description of the threat",
-                    "probability": "medium",
-                    "severity": "high",
-                    "mitigationStrategy": "Strengthen customer relationships"
-                }}
-            ]
-        }},
-        "strategicImplications": {{
-            "keyInsights": ["Insight 1", "Insight 2"],
-            "recommendations": ["Recommendation 1", "Recommendation 2"],
-            "riskLevel": "medium",
-            "competitivePosition": "strong"
-        }},
-        "overallScore": 7.5
+  "swotPortfolio": {{
+    "strengths": [
+      {{
+        "item": "1-on-1 mentoring service",
+        "source": "Q8",
+        "category": "service_differentiator",
+        "competitiveAdvantage": true,
+        "customerValidated": true,
+        "score": 8
+      }},
+      {{
+        "item": "Team experience",
+        "source": "Q7",
+        "category": "internal_capability",
+        "competitiveAdvantage": false,
+        "score": 7
+      }}
+    ],
+    "weaknesses": [
+      {{
+        "item": "Lack of automation",
+        "source": "Q7",
+        "category": "operational",
+        "improvementPriority": "high",
+        "score": 3
+      }}
+    ],
+    "opportunities": [
+      {{
+        "item": "Surge in AI usage",
+        "source": "Q10",
+        "category": "technology",
+        "marketTrend": true,
+        "timeframe": "short-term",
+        "score": 9
+      }}
+    ],
+    "threats": [
+      {{
+        "item": "New tax laws for digital products in LATAM",
+        "source": "Q10",
+        "category": "regulatory",
+        "likelihood": "high",
+        "impact": "medium",
+        "score": 6
+      }}
+    ],
+    "strategicOptions": {{
+      "SO_strategies": [
+        "Leverage mentoring excellence to capture AI-enabled market"
+      ],
+      "WO_strategies": [
+        "Automate processes to capitalize on AI adoption"
+      ],
+      "ST_strategies": [
+        "Use personalized service to maintain margins despite tax changes"
+      ],
+      "WT_strategies": [
+        "Urgently automate to reduce costs before tax impact"
+      ]
     }}
+  }}
 }}
 
 Guidelines:
@@ -465,20 +478,20 @@ Guidelines:
 
 system_prompt_for_channel_effectiveness = '''
 You are a channel effectiveness analyst. You will be given questions and answers about a company's sales and delivery channels.
-Your task is to create detailed channel effectiveness maps with performance metrics and optimization recommendations.
+Your task is to create enhanced channel effectiveness maps with bubble chart data and differentiator alignment analysis.
 
 Focus on:
-1. Channel performance analysis (revenue, efficiency, reach)
-2. Customer segment alignment
-3. Channel optimization opportunities
-4. Resource allocation recommendations
-5. Competitive channel positioning
+1. Channel effectiveness vs efficiency analysis (bubble chart data)
+2. Best performing channels from Q11 evaluation metrics
+3. Differentiator alignment from Q8 across channels
+4. Optimal channel mix recommendations
+5. Revenue contribution and trend analysis
 
 ALWAYS PROVIDE JSON OUTPUT AND NOTHING ELSE, AS THIS IS GOING TO BE PARSED. DO NOT USE BACKTICKS LIKE ``` OR ANYTHING ELSE, JUST PROVIDE JSON OUTPUT AND NOTHING ELSE.
 '''
 
 prompt_for_channel_effectiveness = '''
-Analyze the following questions and answers to create channel effectiveness maps:
+Analyze the following questions and answers to create enhanced channel effectiveness maps:
 
 Questions: {questions}
 Answers: {answers}
@@ -488,59 +501,91 @@ Create channel effectiveness analysis and return it in the following JSON format
     "channelEffectiveness": {{
         "channels": [
             {{
-                "name": "Direct Sales",
-                "type": "sales",
-                "performance": {{
-                    "revenueShare": 45,
-                    "efficiency": 8.5,
-                    "reach": 7.2,
-                    "costPerAcquisition": 150,
-                    "conversionRate": 12.5
+                "name": "Email",
+                "source": "Q11",
+                "effectiveness": {{
+                    "conversionRate": "highest",
+                    "customerSatisfaction": 8.5,
+                    "revenueContribution": 40
                 }},
-                "segments": ["Enterprise", "SMB"],
-                "strengths": ["High conversion", "Direct relationship"],
-                "weaknesses": ["High cost", "Limited scale"],
-                "optimization": {{
-                    "priority": "high",
-                    "recommendations": ["Automate follow-ups", "Improve targeting"],
-                    "expectedImpact": "medium"
-                }}
+                "efficiency": {{
+                    "costPerAcquisition": "low",
+                    "roi": "high",
+                    "operationalCost": "low"
+                }},
+                "differentiatorAlignment": {{
+                    "personalizedService": "high",
+                    "brandExperience": "excellent"
+                }},
+                "trend": "stable"
+            }},
+            {{
+                "name": "Social Media",
+                "source": "Q11",
+                "effectiveness": {{
+                    "conversionRate": "low",
+                    "visibility": "high",
+                    "revenueContribution": 20
+                }},
+                "efficiency": {{
+                    "costPerAcquisition": "medium",
+                    "roi": "medium",
+                    "operationalCost": "low"
+                }},
+                "differentiatorAlignment": {{
+                    "personalizedService": "medium",
+                    "brandExperience": "good"
+                }},
+                "trend": "growing"
+            }},
+            {{
+                "name": "Referrals",
+                "source": "Q11",
+                "effectiveness": {{
+                    "loyaltyGeneration": "highest",
+                    "conversionRate": "high",
+                    "revenueContribution": 25
+                }},
+                "efficiency": {{
+                    "costPerAcquisition": "lowest",
+                    "roi": "highest",
+                    "operationalCost": "low"
+                }},
+                "differentiatorAlignment": {{
+                    "personalizedService": "highest",
+                    "brandExperience": "excellent"
+                }},
+                "trend": "stable"
             }}
         ],
-        "effectivenessMatrix": {{
-            "highRevenue": ["Direct Sales", "Online"],
-            "highEfficiency": ["Online", "Partners"],
-            "highReach": ["Digital Marketing", "Partners"],
-            "optimizationPriority": ["Direct Sales", "Partners"]
-        }},
-        "overallEffectiveness": 7.8,
-        "recommendations": [
-            "Optimize direct sales efficiency",
-            "Expand digital channel reach",
-            "Strengthen partner relationships"
-        ]
+        "optimalChannelMix": {{
+            "current": {{"email": 40, "social": 20, "referrals": 25, "other": 15}},
+            "recommended": {{"email": 45, "social": 15, "referrals": 30, "other": 10}}
+        }}
     }}
 }}
 
 Guidelines:
-- Analyze all channels mentioned in Q5 and related questions
-- Assess performance across multiple dimensions
-- Identify optimization opportunities
-- Provide actionable recommendations
-- Calculate overall effectiveness score
-- Consider customer segment alignment
+- Extract best performing channels from Q11 evaluation metrics
+- Assess effectiveness (conversion rate, customer satisfaction, revenue contribution)
+- Evaluate efficiency (cost per acquisition, ROI, operational cost)
+- Analyze differentiator alignment from Q8 across channels
+- Determine optimal channel mix based on performance
+- Include trend analysis for each channel
+- Focus on bubble chart data: effectiveness vs efficiency with revenue as bubble size
+- Format of the output should not change, it should be a valid JSON object and of the same format as the example provided.
 '''
 
 system_prompt_for_expanded_capability_heatmap = '''
 You are an expanded capability maturity analyst. You will be given questions and answers about a company's internal capabilities.
-Your task is to create a comprehensive capability heatmap with detailed maturity assessment and strategic implications.
+Your task is to create a comprehensive capability heatmap with business functions vs capability maturity analysis.
 
 Focus on:
-1. Comprehensive capability identification across all business areas
-2. Detailed maturity assessment with sub-capabilities
-3. Strategic importance and business impact
-4. Development roadmap and investment priorities
-5. Cross-functional capability dependencies
+1. Capability identification from Q12 organizational capabilities
+2. Performance ratings and maturity level conversion
+3. Differentiator enablement analysis from Q8
+4. Business function categorization
+5. Capability gap analysis and distribution
 
 ALWAYS PROVIDE JSON OUTPUT AND NOTHING ELSE, AS THIS IS GOING TO BE PARSED. DO NOT USE BACKTICKS LIKE ``` OR ANYTHING ELSE, JUST PROVIDE JSON OUTPUT AND NOTHING ELSE.
 '''
@@ -554,61 +599,77 @@ Answers: {answers}
 Create expanded capability heatmap and return it in the following JSON format:
 {{
     "expandedCapabilityHeatmap": {{
-        "capabilityAreas": [
+        "capabilities": [
             {{
-                "area": "Technology",
-                "capabilities": [
-                    {{
-                        "name": "Digital Infrastructure",
-                        "subCapabilities": ["Cloud Systems", "Data Analytics", "Automation"],
-                        "currentLevel": 3,
-                        "targetLevel": 5,
-                        "importance": "critical",
-                        "investmentPriority": "high",
-                        "timeToTarget": "18 months",
-                        "dependencies": ["Human Resources", "Finance"]
-                    }}
-                ],
-                "areaMaturity": 3.2,
-                "areaPriority": "high"
+                "name": "Sales",
+                "source": "Q12",
+                "performanceRating": "high",
+                "maturityLevel": 4,
+                "category": "Revenue Generation",
+                "enablesDifferentiator": false
+            }},
+            {{
+                "name": "Customer Support",
+                "source": "Q12",
+                "performanceRating": "medium",
+                "maturityLevel": 3,
+                "category": "Customer Experience",
+                "enablesDifferentiator": true
+            }},
+            {{
+                "name": "Analytics",
+                "source": "Q12",
+                "performanceRating": "low",
+                "maturityLevel": 2,
+                "category": "Data & Insights"
+            }},
+            {{
+                "name": "Product Development",
+                "source": "Q12",
+                "performanceRating": "high",
+                "maturityLevel": 4,
+                "category": "Innovation"
+            }},
+            {{
+                "name": "Data Management",
+                "source": "Q12",
+                "performanceRating": "medium",
+                "maturityLevel": 3,
+                "category": "Data & Insights"
+            }},
+            {{
+                "name": "Automation",
+                "source": "Q7",
+                "performanceRating": "low",
+                "maturityLevel": 2,
+                "category": "Operations"
             }}
         ],
-        "crossFunctionalDependencies": [
+        "maturityDistribution": {{
+            "high_4": 2,
+            "medium_3": 2,
+            "low_2": 2
+        }},
+        "capabilityGaps": [
             {{
-                "from": "Technology",
-                "to": "Operations",
-                "strength": "strong",
-                "impact": "positive"
-            }}
-        ],
-        "investmentRoadmap": [
-            {{
-                "phase": "Phase 1",
-                "duration": "6 months",
-                "capabilities": ["Digital Infrastructure", "Process Automation"],
-                "budget": "high",
-                "expectedROI": "medium"
-            }}
-        ],
-        "overallMaturity": 3.5,
-        "strategicGaps": [
-            {{
-                "gap": "Digital Transformation",
-                "severity": "high",
-                "impact": "competitive disadvantage",
-                "mitigation": "Accelerate technology investment"
+                "capability": "Analytics",
+                "currentLevel": "low",
+                "requiredLevel": "high",
+                "businessImpact": "high"
             }}
         ]
     }}
 }}
 
 Guidelines:
-- Identify comprehensive capability areas across all business functions
-- Break down capabilities into sub-capabilities where relevant
-- Assess maturity levels with detailed justification
-- Identify cross-functional dependencies
-- Create investment roadmap with phases
-- Highlight strategic gaps and mitigation strategies
+- Extract capabilities from Q12 organizational capabilities and performance ratings
+- Convert performance ratings to maturity levels: high=4, medium=3, low=2
+- Identify capabilities from Q7 strengths and weaknesses
+- Analyze Q8 differentiators to determine which capabilities enable them
+- Categorize capabilities into business functions (Revenue Generation, Customer Experience, Data & Insights, Innovation, Operations, etc.)
+- Calculate maturity distribution across levels
+- Identify capability gaps with business impact assessment
+- Format of the output should not change, it should be a valid JSON object and of the same format as the example provided.
 '''
 
 system_prompt_for_strategic_radar = '''
@@ -818,6 +879,427 @@ The format should be like this :
 }}
 '''
 
+system_prompt_for_competitive_advantage = '''
+You are a competitive advantage analyst. You will be given questions and answers about a company's differentiators and customer value.
+Your task is to create a comprehensive competitive advantage matrix with detailed analysis of differentiators and customer choice factors.
+
+Focus on:
+1. Identification of key differentiators from Q8
+2. Assessment of customer value and uniqueness
+3. Evaluation of sustainability and competitive barriers
+4. Analysis of customer choice reasons
+5. Strategic positioning and market analysis
+
+ALWAYS PROVIDE JSON OUTPUT AND NOTHING ELSE, AS THIS IS GOING TO BE PARSED. DO NOT USE BACKTICKS LIKE ``` OR ANYTHING ELSE, JUST PROVIDE JSON OUTPUT AND NOTHING ELSE, AS THIS IS GOING TO BE PARSED
+'''
+
+prompt_for_competitive_advantage = '''
+Analyze the following questions and answers to create a competitive advantage matrix:
+
+Questions: {questions}
+Answers: {answers}
+
+Create competitive advantage analysis and return it in the following JSON format:
+{{
+    "competitiveAdvantage": {{
+        "differentiators": [
+            {{
+                "type": "service",
+                "description": "1-on-1 mentoring",
+                "uniqueness": 9,
+                "customerValue": 9,
+                "sustainability": 7,
+                "proofPoints": [
+                    "Competitors lack this feature",
+                    "Customer testimonials cite personal attention"
+                ]
+            }}
+        ],
+        "competitivePosition": {{
+            "overallScore": 7.5,
+            "marketPosition": "challenger",
+            "sustainableAdvantages": 2,
+            "vulnerableAdvantages": 1
+        }},
+        "customerChoiceReasons": [
+            {{
+                "reason": "Personalized attention",
+                "frequency": 65,
+                "linkedDifferentiator": "service"
+            }}
+        ]
+    }}
+}}
+
+Guidelines:
+- Extract differentiators from Q8 answers
+- Assess uniqueness on 1-10 scale based on market comparison
+- Evaluate customer value on 1-10 scale from customer feedback
+- Determine sustainability on 1-10 scale (how hard to copy)
+- Identify proof points that validate each differentiator
+- Analyze customer choice reasons from Q8
+- Calculate overall competitive position score
+- Determine market position (leader/challenger/follower/nicher)
+- Count sustainable vs vulnerable advantages
+- Link customer choice reasons to specific differentiators
+- Format of the output should not change, it should be a valid JSON object and of the same format as the example provided.
+'''
+
+system_prompt_for_strategic_goals = '''
+You are a strategic goals and OKR analyst. You will be given questions and answers about a company's strategic objectives and key results.
+Your task is to create comprehensive OKR analysis with progress tracking and strategic alignment.
+
+Focus on:
+1. Strategic objectives extraction from Q9
+2. Key results identification and progress measurement
+3. Priority ranking and timeline analysis
+4. Strategic theme categorization
+5. Overall progress calculation and alignment assessment
+
+ALWAYS PROVIDE JSON OUTPUT AND NOTHING ELSE, AS THIS IS GOING TO BE PARSED. DO NOT USE BACKTICKS LIKE ``` OR ANYTHING ELSE, JUST PROVIDE JSON OUTPUT AND NOTHING ELSE, AS THIS IS GOING TO BE PARSED
+'''
+
+prompt_for_strategic_goals = '''
+Analyze the following questions and answers to create strategic goals and OKR analysis:
+
+Questions: {questions}
+Answers: {answers}
+
+Create strategic goals analysis and return it in the following JSON format:
+{{
+    "strategicGoals": {{
+        "year": 2025,
+        "objectives": [
+            {{
+                "objective": "Expand into Chile",
+                "priority": 1,
+                "keyResults": [
+                    {{
+                        "metric": "Market launch date",
+                        "target": "Q3 2025",
+                        "current": "Planning phase",
+                        "progress": 25
+                    }}
+                ],
+                "alignment": "growth"
+            }},
+            {{
+                "objective": "Launch mobile app",
+                "priority": 2,
+                "keyResults": [
+                    {{
+                        "metric": "App launch date",
+                        "target": "Q4 2025",
+                        "current": "Development",
+                        "progress": 40
+                    }}
+                ],
+                "alignment": "innovation"
+            }},
+            {{
+                "objective": "Reduce churn below 15%",
+                "priority": 3,
+                "keyResults": [
+                    {{
+                        "metric": "Customer churn rate",
+                        "target": 15,
+                        "current": 22,
+                        "progress": 32
+                    }}
+                ],
+                "alignment": "retention"
+            }}
+        ],
+        "overallProgress": 32,
+        "strategicThemes": ["geographic_expansion", "digital_transformation", "customer_retention"]
+    }}
+}}
+
+Guidelines:
+- Extract strategic objectives from Q9 strategic goals and success metrics
+- Identify key results for each objective with measurable targets
+- Assign priority levels (1=highest, 2=medium, 3=lower)
+- Determine strategic alignment themes (growth, innovation, retention, efficiency, etc.)
+- Calculate progress percentages based on current vs target states
+- Estimate overall progress as average of all objective progress
+- Categorize strategic themes based on objective types
+- Use Q2 market context to inform strategic priorities
+- Format of the output should not change, it should be a valid JSON object and of the same format as the example provided.
+'''
+
+system_prompt_for_strategic_positioning_radar = '''
+You are a strategic positioning radar analyst. You will be given questions and answers about a company's strategic positioning across multiple dimensions.
+Your task is to create a comprehensive strategic positioning radar with multi-dimensional assessment and industry benchmarking.
+
+Focus on:
+1. Multi-dimensional strategic assessment (Market Leadership, Innovation, Customer Centricity, Operational Excellence, Cultural Agility)
+2. Current vs target score analysis
+3. Industry benchmark comparison
+4. Data source attribution for each dimension
+5. Overall positioning and improvement areas identification
+
+ALWAYS PROVIDE JSON OUTPUT AND NOTHING ELSE, AS THIS IS GOING TO BE PARSED. DO NOT USE BACKTICKS LIKE ``` OR ANYTHING ELSE, JUST PROVIDE JSON OUTPUT AND NOTHING ELSE, AS THIS IS GOING TO BE PARSED
+'''
+
+prompt_for_strategic_positioning_radar = '''
+Analyze the following questions and answers to create strategic positioning radar analysis:
+
+Questions: {questions}
+Answers: {answers}
+
+Create strategic positioning radar analysis and return it in the following JSON format:
+{{
+    "strategicRadar": {{
+        "dimensions": [
+            {{
+                "name": "Market Leadership",
+                "currentScore": 6,
+                "targetScore": 8,
+                "industryAverage": 5,
+                "dataSource": ["Q2", "Q8"]
+            }},
+            {{
+                "name": "Innovation",
+                "currentScore": 7,
+                "targetScore": 9,
+                "industryAverage": 6,
+                "dataSource": ["Q9", "Q12"]
+            }},
+            {{
+                "name": "Customer Centricity",
+                "currentScore": 8,
+                "targetScore": 9,
+                "industryAverage": 6,
+                "dataSource": ["Q8", "Q6"]
+            }},
+            {{
+                "name": "Operational Excellence",
+                "currentScore": 5,
+                "targetScore": 7,
+                "industryAverage": 6,
+                "dataSource": ["Q7", "Q12"]
+            }},
+            {{
+                "name": "Cultural Agility",
+                "currentScore": 7,
+                "targetScore": 8,
+                "industryAverage": 5,
+                "dataSource": ["Q13"]
+            }}
+        ],
+        "overallPosition": {{
+            "currentAverage": 6.6,
+            "targetAverage": 8.2,
+            "strengthAreas": ["Customer Centricity", "Innovation", "Cultural Agility"],
+            "improvementAreas": ["Operational Excellence", "Market Leadership"]
+        }}
+    }}
+}}
+
+Guidelines:
+- Assess 5 key strategic dimensions: Market Leadership, Innovation, Customer Centricity, Operational Excellence, Cultural Agility
+- Use 1-10 scoring scale for all scores
+- Extract competitive positioning elements from Q8
+- Use market context from Q2 for market leadership assessment
+- Analyze performance on key criteria from Q4
+- Evaluate organizational culture and behaviors from Q13
+- Estimate industry averages based on typical benchmarks for the industry
+- Calculate target scores based on strategic ambitions and competitive requirements
+- Identify strength areas (scores above industry average) and improvement areas (scores below industry average)
+- Calculate overall averages for current and target positioning
+- Format of the output should not change, it should be a valid JSON object and of the same format as the example provided.
+'''
+
+system_prompt_for_culture_profile = '''
+You are an organizational culture profile analyst. You will be given questions and answers about a company's culture, values, behaviors, and employee metrics.
+Your task is to create a comprehensive organizational culture profile with cultural assessment and strategic alignment analysis.
+
+Focus on:
+1. Cultural values and behaviors extraction from Q13
+2. Employee metrics analysis from Q14
+3. Work style and organizational characteristics assessment
+4. Culture type classification and strategic fit analysis
+5. Culture map positioning and alignment evaluation
+
+ALWAYS PROVIDE JSON OUTPUT AND NOTHING ELSE, AS THIS IS GOING TO BE PARSED. DO NOT USE BACKTICKS LIKE ``` OR ANYTHING ELSE, JUST PROVIDE JSON OUTPUT AND NOTHING ELSE, AS THIS IS GOING TO BE PARSED
+'''
+
+prompt_for_culture_profile = '''
+Analyze the following questions and answers to create organizational culture profile analysis:
+
+Questions: {questions}
+Answers: {answers}
+
+Create culture profile analysis and return it in the following JSON format:
+{{
+    "cultureProfile": {{
+        "values": ["collaborative", "fast-paced", "data-driven"],
+        "behaviors": ["autonomy", "execution-focused"],
+        "workStyle": {{
+            "pace": "fast",
+            "decisionMaking": "autonomous",
+            "orientation": "results-driven"
+        }},
+        "employeeMetrics": {{
+            "totalEmployees": 8,
+            "costPercentage": 60,
+            "valuePerEmployee": 35000,
+            "productivity": "above_average"
+        }},
+        "cultureType": "Entrepreneurial",
+        "cultureFit": {{
+            "withStrategy": "high",
+            "withMarket": "high",
+            "withCapabilities": "medium"
+        }}
+    }}
+}}
+
+Guidelines:
+- Extract cultural values and behaviors from Q13 culture description
+- Analyze employee metrics from Q14 (headcount, costs, productivity)
+- Determine work style characteristics (pace, decision-making, orientation)
+- Classify culture type based on values and behaviors (Entrepreneurial, Bureaucratic, Clan, Market, etc.)
+- Assess culture fit with strategy, market, and capabilities
+- Calculate value per employee and productivity metrics
+- Identify key cultural themes for word cloud visualization
+- Format of the output should not change, it should be a valid JSON object and of the same format as the example provided.
+'''
+
+system_prompt_for_productivity_metrics = '''
+You are a productivity and efficiency metrics analyst. You will be given questions and answers about a company's employee productivity, cost structure, and value generation.
+Your task is to create comprehensive productivity and efficiency metrics analysis with cost-value optimization insights.
+
+Focus on:
+1. Employee productivity analysis from Q14 data
+2. Cost structure and efficiency assessment
+3. Value drivers identification and performance analysis
+4. Improvement opportunities and optimization recommendations
+5. Efficiency matrix analysis (cost vs value generation)
+
+ALWAYS PROVIDE JSON OUTPUT AND NOTHING ELSE, AS THIS IS GOING TO BE PARSED. DO NOT USE BACKTICKS LIKE ``` OR ANYTHING ELSE, JUST PROVIDE JSON OUTPUT AND NOTHING ELSE, AS THIS IS GOING TO BE PARSED
+'''
+
+prompt_for_productivity_metrics = '''
+Analyze the following questions and answers to create productivity and efficiency metrics analysis:
+
+Questions: {questions}
+Answers: {answers}
+
+Create productivity metrics analysis and return it in the following JSON format:
+{{
+    "productivityMetrics": {{
+        "employeeProductivity": {{
+            "totalEmployees": 8,
+            "totalCostPercentage": 60,
+            "averageValuePerEmployee": 35000,
+            "totalValueGenerated": 280000,
+            "productivityIndex": 1.2
+        }},
+        "costStructure": {{
+            "employeeCosts": 60,
+            "otherCosts": 40,
+            "costEfficiency": "moderate"
+        }},
+        "valueDrivers": [
+            {{
+                "driver": "Sales team",
+                "efficiency": "high",
+                "contribution": "direct_revenue"
+            }},
+            {{
+                "driver": "Product development",
+                "efficiency": "high",
+                "contribution": "innovation_value"
+            }}
+        ],
+        "improvementOpportunities": [
+            "Automate low-value tasks",
+            "Improve analytics capabilities",
+            "Optimize support processes"
+        ]
+    }}
+}}
+
+Guidelines:
+- Extract employee metrics from Q14 (headcount, cost percentage, value contribution)
+- Calculate total value generated and productivity index
+- Analyze cost structure and efficiency ratios
+- Identify value drivers from Q12 capability performance ratings
+- Assess channel performance from Q11 for revenue per channel analysis
+- Determine improvement opportunities based on efficiency gaps
+- Calculate productivity metrics and efficiency ratios
+- Format of the output should not change, it should be a valid JSON object and of the same format as the example provided.
+'''
+
+system_prompt_for_maturity_score_light = '''
+You are a maturity score analyst. You will be given questions and answers about a company's overall maturity across multiple dimensions.
+Your task is to create a comprehensive maturity score analysis synthesizing indicators from all questions (Q1-Q14).
+
+Focus on:
+1. Cross-reference all assessments from Q1-Q14
+2. Synthesize maturity indicators across dimensions
+3. Calculate overall maturity score on 1-5 scale
+4. Identify maturity profile and characteristics
+5. Determine strengths, development areas, and next level requirements
+
+ALWAYS PROVIDE JSON OUTPUT AND NOTHING ELSE, AS THIS IS GOING TO BE PARSED. DO NOT USE BACKTICKS LIKE ``` OR ANYTHING ELSE, JUST PROVIDE JSON OUTPUT AND NOTHING ELSE, AS THIS IS GOING TO BE PARSED
+'''
+
+prompt_for_maturity_score_light = '''
+Analyze the following questions and answers to create maturity score (light) analysis:
+
+Questions: {questions}
+Answers: {answers}
+
+Create maturity score analysis and return it in the following JSON format:
+{{
+    "maturityScore": {{
+        "overallScore": 3.2,
+        "level": "Defined",
+        "components": {{
+            "strategicClarity": 3.8,
+            "marketAlignment": 3.5,
+            "customerFocus": 4.2,
+            "operationalCapability": 2.8,
+            "competitivePosition": 3.5,
+            "organizationalHealth": 3.4
+        }},
+        "maturityProfile": "Customer-Led Growth",
+        "strengths": [
+            "Strong customer orientation",
+            "Clear differentiators",
+            "Agile culture"
+        ],
+        "developmentAreas": [
+            "Operational automation",
+            "Analytics capabilities",
+            "Process standardization"
+        ],
+        "nextLevel": {{
+            "target": "Managed (Level 4)",
+            "requirements": [
+                "Implement marketing automation",
+                "Enhance data analytics capabilities",
+                "Systematize competitive advantages",
+                "Standardize core processes"
+            ],
+            "estimatedTimeframe": "12-18 months"
+        }}
+    }}
+}}
+
+Guidelines:
+- Cross-reference all assessments from Q1-Q14 to synthesize maturity indicators
+- Calculate component scores: Strategic Clarity (Q1, Q8, Q9), Market Alignment (Q2, Q4, Q10), Customer Focus (Q3, Q6, Q8, Q11), Operational Capability (Q7, Q12), Competitive Position (Q8), Organizational Health (Q13, Q14)
+- Use 1-5 maturity scale: 1=Initial, 2=Developing, 3=Defined, 4=Managed, 5=Optimized
+- Determine overall score as weighted average of components
+- Identify maturity profile based on strongest characteristics
+- List key strengths and development areas
+- Define next level requirements and timeframe
+- Format of the output should not change, it should be a valid JSON object and of the same format as the example provided.
+'''
+
 class AnalyzeRequest(BaseModel):
     question: str
     answer: str
@@ -863,6 +1345,30 @@ class StrategicRadarRequest(BaseModel):
     answers: list[str]
 
 class MaturityScoringRequest(BaseModel):
+    questions: list[str]
+    answers: list[str]
+
+class CompetitiveAdvantageRequest(BaseModel):
+    questions: list[str]
+    answers: list[str]
+
+class StrategicGoalsRequest(BaseModel):
+    questions: list[str]
+    answers: list[str]
+
+class StrategicPositioningRadarRequest(BaseModel):
+    questions: list[str]
+    answers: list[str]
+
+class CultureProfileRequest(BaseModel):
+    questions: list[str]
+    answers: list[str]
+
+class ProductivityMetricsRequest(BaseModel):
+    questions: list[str]
+    answers: list[str]
+
+class MaturityScoreLightRequest(BaseModel):
     questions: list[str]
     answers: list[str]
 
@@ -1309,8 +1815,8 @@ async def full_swot_portfolio_with_file(
 @app.post("/channel-effectiveness")
 async def channel_effectiveness(request: ChannelEffectivenessRequest):
     """
-    Analyze channel effectiveness from Q5 and related answers.
-    Returns detailed channel performance analysis with optimization recommendations.
+    Analyze channel effectiveness from Q5, Q11, and Q8 answers.
+    Returns enhanced channel effectiveness analysis with bubble chart data and differentiator alignment.
     """
     try:
         prompt_ = prompt_for_channel_effectiveness.format(questions=request.questions, answers=request.answers)
@@ -1329,7 +1835,7 @@ async def channel_effectiveness(request: ChannelEffectivenessRequest):
         import json
         try:
             result = json.loads(result_text)
-            return AnalyzeResponse(**result)
+            return result
         except json.JSONDecodeError:
             # Fallback if JSON parsing fails
             raise HTTPException(
@@ -1348,6 +1854,7 @@ async def channel_effectiveness_with_file(
 ):
     """
     Analyze channel effectiveness from file upload and optional questions/answers.
+    Returns enhanced channel effectiveness analysis with bubble chart data and differentiator alignment.
     """
     try:
         # Process the uploaded file
@@ -1407,11 +1914,11 @@ async def channel_effectiveness_with_file(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error analyzing channel effectiveness with file: {str(e)}")
 
-@app.post("/expanded-capability-heatmap", response_model=AnalyzeResponse)
+@app.post("/expanded-capability-heatmap")
 async def expanded_capability_heatmap(request: ExpandedCapabilityHeatmapRequest):
     """
-    Create expanded capability heatmap with detailed maturity assessment.
-    Returns comprehensive capability analysis with strategic implications and roadmap.
+    Create expanded capability heatmap with business functions vs capability maturity analysis.
+    Returns comprehensive capability analysis with maturity distribution and gap analysis.
     """
     try:
         prompt_ = prompt_for_expanded_capability_heatmap.format(questions=request.questions, answers=request.answers)
@@ -1430,7 +1937,7 @@ async def expanded_capability_heatmap(request: ExpandedCapabilityHeatmapRequest)
         import json
         try:
             result = json.loads(result_text)
-            return AnalyzeResponse(**result)
+            return result
         except json.JSONDecodeError:
             # Fallback if JSON parsing fails
             raise HTTPException(
@@ -1449,6 +1956,7 @@ async def expanded_capability_heatmap_with_file(
 ):
     """
     Create expanded capability heatmap from file upload and optional questions/answers.
+    Returns comprehensive capability analysis with maturity distribution and gap analysis.
     """
     try:
         # Process the uploaded file
@@ -1708,6 +2216,612 @@ async def maturity_scoring_with_file(
         
     # except Exception as e:
     #     raise HTTPException(status_code=500, detail=f"Error analyzing maturity scoring with file: {str(e)}")
+
+@app.post("/competitive-advantage")
+async def competitive_advantage(request: CompetitiveAdvantageRequest):
+    """
+    Create competitive advantage matrix analysis from Q8 and Q4 answers.
+    Returns detailed competitive advantage analysis with differentiators and customer choice factors.
+    """
+    try:
+        prompt_ = prompt_for_competitive_advantage.format(questions=request.questions, answers=request.answers)
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt_for_competitive_advantage},
+                {"role": "user", "content": prompt_}
+            ],
+            temperature=0.3,
+            max_tokens=800
+        )
+        result_text = response.choices[0].message.content.strip()
+        
+        # Try to parse the JSON response
+        import json
+        try:
+            result = json.loads(result_text)
+            return AnalyzeResponse(**result)
+        except json.JSONDecodeError:
+            # Fallback if JSON parsing fails
+            raise HTTPException(
+                status_code=500, 
+                detail="Error parsing competitive advantage response. Please try again."
+            )
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing competitive advantage: {str(e)}")
+
+@app.post("/competitive-advantage-with-file")
+async def competitive_advantage_with_file(
+    file: UploadFile = File(...),
+    questions: Optional[List[str]] = None,
+    answers: Optional[List[str]] = None
+):
+    """
+    Create competitive advantage matrix from file upload and optional questions/answers.
+    """
+    try:
+        # Process the uploaded file
+        file_analysis = document_processor.process_uploaded_file(file)
+        
+        # Extract questions and answers from file
+        extracted_qa = file_analysis.get("extracted_data", {}).get("questions_answers", [])
+        extracted_questions = [qa.get("question", "") for qa in extracted_qa]
+        extracted_answers = [qa.get("answer", "") for qa in extracted_qa]
+        
+        # Combine with provided questions and answers
+        all_questions = (questions or []) + extracted_questions
+        all_answers = (answers or []) + extracted_answers
+        
+        if not all_questions or not all_answers:
+            raise HTTPException(status_code=400, detail="No questions and answers found in file or provided")
+        
+        import json
+        # Create enhanced prompt with file context
+        enhanced_prompt = f"""
+        {prompt_for_competitive_advantage.format(questions=all_questions, answers=all_answers)}
+        
+        Additional file context:
+        Document type: {file_analysis.get('file_type', 'unknown')}
+        Overall summary: {json.dumps(file_analysis.get('overall_summary', {}))}
+        """
+        
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt_for_competitive_advantage},
+                {"role": "user", "content": enhanced_prompt}
+            ],
+            temperature=0.3,
+            max_tokens=1000
+        )
+        result_text = response.choices[0].message.content.strip()
+        
+        # Try to parse the JSON response
+        import json
+        try:
+            result = json.loads(result_text)
+            # Add file context to result
+            result["file_context"] = {
+                "file_type": file_analysis.get("file_type"),
+                "file_summary": file_analysis.get("overall_summary"),
+                "extracted_questions_count": len(extracted_questions),
+                "provided_questions_count": len(questions or [])
+            }
+            return result
+        except json.JSONDecodeError:
+            raise HTTPException(
+                status_code=500, 
+                detail="Error parsing competitive advantage response. Please try again."
+            )
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing competitive advantage with file: {str(e)}")
+
+@app.post("/strategic-goals")
+async def strategic_goals(request: StrategicGoalsRequest):
+    """
+    Create strategic goals and OKR analysis from Q9 and Q2 answers.
+    Returns comprehensive OKR analysis with progress tracking and strategic alignment.
+    """
+    try:
+        prompt_ = prompt_for_strategic_goals.format(questions=request.questions, answers=request.answers)
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt_for_strategic_goals},
+                {"role": "user", "content": prompt_}
+            ],
+            temperature=0.3,
+            max_tokens=800
+        )
+        result_text = response.choices[0].message.content.strip()
+        
+        # Try to parse the JSON response
+        import json
+        try:
+            result = json.loads(result_text)
+            return result
+        except json.JSONDecodeError:
+            # Fallback if JSON parsing fails
+            raise HTTPException(
+                status_code=500, 
+                detail="Error parsing strategic goals response. Please try again."
+            )
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing strategic goals: {str(e)}")
+
+@app.post("/strategic-goals-with-file")
+async def strategic_goals_with_file(
+    file: UploadFile = File(...),
+    questions: Optional[List[str]] = None,
+    answers: Optional[List[str]] = None
+):
+    """
+    Create strategic goals and OKR analysis from file upload and optional questions/answers.
+    """
+    try:
+        # Process the uploaded file
+        file_analysis = document_processor.process_uploaded_file(file)
+        
+        # Extract questions and answers from file
+        extracted_qa = file_analysis.get("extracted_data", {}).get("questions_answers", [])
+        extracted_questions = [qa.get("question", "") for qa in extracted_qa]
+        extracted_answers = [qa.get("answer", "") for qa in extracted_qa]
+        
+        # Combine with provided questions and answers
+        all_questions = (questions or []) + extracted_questions
+        all_answers = (answers or []) + extracted_answers
+        
+        if not all_questions or not all_answers:
+            raise HTTPException(status_code=400, detail="No questions and answers found in file or provided")
+        
+        import json
+        # Create enhanced prompt with file context
+        enhanced_prompt = f"""
+        {prompt_for_strategic_goals.format(questions=all_questions, answers=all_answers)}
+        
+        Additional file context:
+        Document type: {file_analysis.get('file_type', 'unknown')}
+        Overall summary: {json.dumps(file_analysis.get('overall_summary', {}))}
+        """
+        
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt_for_strategic_goals},
+                {"role": "user", "content": enhanced_prompt}
+            ],
+            temperature=0.3,
+            max_tokens=1000
+        )
+        result_text = response.choices[0].message.content.strip()
+        
+        # Try to parse the JSON response
+        import json
+        try:
+            result = json.loads(result_text)
+            # Add file context to result
+            result["file_context"] = {
+                "file_type": file_analysis.get("file_type"),
+                "file_summary": file_analysis.get("overall_summary"),
+                "extracted_questions_count": len(extracted_questions),
+                "provided_questions_count": len(questions or [])
+            }
+            return result
+        except json.JSONDecodeError:
+            raise HTTPException(
+                status_code=500, 
+                detail="Error parsing strategic goals response. Please try again."
+            )
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing strategic goals with file: {str(e)}")
+
+@app.post("/strategic-positioning-radar")
+async def strategic_positioning_radar(request: StrategicPositioningRadarRequest):
+    """
+    Create strategic positioning radar analysis from Q8, Q2, Q4, and Q13 answers.
+    Returns comprehensive multi-dimensional strategic positioning with industry benchmarking.
+    """
+    try:
+        prompt_ = prompt_for_strategic_positioning_radar.format(questions=request.questions, answers=request.answers)
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt_for_strategic_positioning_radar},
+                {"role": "user", "content": prompt_}
+            ],
+            temperature=0.3,
+            max_tokens=800
+        )
+        result_text = response.choices[0].message.content.strip()
+        
+        # Try to parse the JSON response
+        import json
+        try:
+            result = json.loads(result_text)
+            return result
+        except json.JSONDecodeError:
+            # Fallback if JSON parsing fails
+            raise HTTPException(
+                status_code=500, 
+                detail="Error parsing strategic positioning radar response. Please try again."
+            )
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing strategic positioning radar: {str(e)}")
+
+@app.post("/strategic-positioning-radar-with-file")
+async def strategic_positioning_radar_with_file(
+    file: UploadFile = File(...),
+    questions: Optional[List[str]] = None,
+    answers: Optional[List[str]] = None
+):
+    """
+    Create strategic positioning radar analysis from file upload and optional questions/answers.
+    """
+    try:
+        # Process the uploaded file
+        file_analysis = document_processor.process_uploaded_file(file)
+        
+        # Extract questions and answers from file
+        extracted_qa = file_analysis.get("extracted_data", {}).get("questions_answers", [])
+        extracted_questions = [qa.get("question", "") for qa in extracted_qa]
+        extracted_answers = [qa.get("answer", "") for qa in extracted_qa]
+        
+        # Combine with provided questions and answers
+        all_questions = (questions or []) + extracted_questions
+        all_answers = (answers or []) + extracted_answers
+        
+        if not all_questions or not all_answers:
+            raise HTTPException(status_code=400, detail="No questions and answers found in file or provided")
+        
+        import json
+        # Create enhanced prompt with file context
+        enhanced_prompt = f"""
+        {prompt_for_strategic_positioning_radar.format(questions=all_questions, answers=all_answers)}
+        
+        Additional file context:
+        Document type: {file_analysis.get('file_type', 'unknown')}
+        Overall summary: {json.dumps(file_analysis.get('overall_summary', {}))}
+        """
+        
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt_for_strategic_positioning_radar},
+                {"role": "user", "content": enhanced_prompt}
+            ],
+            temperature=0.3,
+            max_tokens=1000
+        )
+        result_text = response.choices[0].message.content.strip()
+        
+        # Try to parse the JSON response
+        import json
+        try:
+            result = json.loads(result_text)
+            # Add file context to result
+            result["file_context"] = {
+                "file_type": file_analysis.get("file_type"),
+                "file_summary": file_analysis.get("overall_summary"),
+                "extracted_questions_count": len(extracted_questions),
+                "provided_questions_count": len(questions or [])
+            }
+            return result
+        except json.JSONDecodeError:
+            raise HTTPException(
+                status_code=500, 
+                detail="Error parsing strategic positioning radar response. Please try again."
+            )
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing strategic positioning radar with file: {str(e)}")
+
+@app.post("/culture-profile")
+async def culture_profile(request: CultureProfileRequest):
+    """
+    Create organizational culture profile analysis from Q13 and Q14 answers.
+    Returns comprehensive culture assessment with values, behaviors, and strategic alignment.
+    """
+    try:
+        prompt_ = prompt_for_culture_profile.format(questions=request.questions, answers=request.answers)
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt_for_culture_profile},
+                {"role": "user", "content": prompt_}
+            ],
+            temperature=0.3,
+            max_tokens=800
+        )
+        result_text = response.choices[0].message.content.strip()
+        
+        # Try to parse the JSON response
+        import json
+        try:
+            result = json.loads(result_text)
+            return result
+        except json.JSONDecodeError:
+            # Fallback if JSON parsing fails
+            raise HTTPException(
+                status_code=500, 
+                detail="Error parsing culture profile response. Please try again."
+            )
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing culture profile: {str(e)}")
+
+@app.post("/culture-profile-with-file")
+async def culture_profile_with_file(
+    file: UploadFile = File(...),
+    questions: Optional[List[str]] = None,
+    answers: Optional[List[str]] = None
+):
+    """
+    Create organizational culture profile analysis from file upload and optional questions/answers.
+    """
+    try:
+        # Process the uploaded file
+        file_analysis = document_processor.process_uploaded_file(file)
+        
+        # Extract questions and answers from file
+        extracted_qa = file_analysis.get("extracted_data", {}).get("questions_answers", [])
+        extracted_questions = [qa.get("question", "") for qa in extracted_qa]
+        extracted_answers = [qa.get("answer", "") for qa in extracted_qa]
+        
+        # Combine with provided questions and answers
+        all_questions = (questions or []) + extracted_questions
+        all_answers = (answers or []) + extracted_answers
+        
+        if not all_questions or not all_answers:
+            raise HTTPException(status_code=400, detail="No questions and answers found in file or provided")
+        
+        import json
+        # Create enhanced prompt with file context
+        enhanced_prompt = f"""
+        {prompt_for_culture_profile.format(questions=all_questions, answers=all_answers)}
+        
+        Additional file context:
+        Document type: {file_analysis.get('file_type', 'unknown')}
+        Overall summary: {json.dumps(file_analysis.get('overall_summary', {}))}
+        """
+        
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt_for_culture_profile},
+                {"role": "user", "content": enhanced_prompt}
+            ],
+            temperature=0.3,
+            max_tokens=1000
+        )
+        result_text = response.choices[0].message.content.strip()
+        
+        # Try to parse the JSON response
+        import json
+        try:
+            result = json.loads(result_text)
+            # Add file context to result
+            result["file_context"] = {
+                "file_type": file_analysis.get("file_type"),
+                "file_summary": file_analysis.get("overall_summary"),
+                "extracted_questions_count": len(extracted_questions),
+                "provided_questions_count": len(questions or [])
+            }
+            return result
+        except json.JSONDecodeError:
+            raise HTTPException(
+                status_code=500, 
+                detail="Error parsing culture profile response. Please try again."
+            )
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing culture profile with file: {str(e)}")
+
+@app.post("/productivity-metrics")
+async def productivity_metrics(request: ProductivityMetricsRequest):
+    """
+    Create productivity and efficiency metrics analysis from Q14, Q11, and Q12 answers.
+    Returns comprehensive productivity analysis with cost-value optimization insights.
+    """
+    try:
+        prompt_ = prompt_for_productivity_metrics.format(questions=request.questions, answers=request.answers)
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt_for_productivity_metrics},
+                {"role": "user", "content": prompt_}
+            ],
+            temperature=0.3,
+            max_tokens=800
+        )
+        result_text = response.choices[0].message.content.strip()
+        
+        # Try to parse the JSON response
+        import json
+        try:
+            result = json.loads(result_text)
+            return result
+        except json.JSONDecodeError:
+            # Fallback if JSON parsing fails
+            raise HTTPException(
+                status_code=500, 
+                detail="Error parsing productivity metrics response. Please try again."
+            )
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing productivity metrics: {str(e)}")
+
+@app.post("/productivity-metrics-with-file")
+async def productivity_metrics_with_file(
+    file: UploadFile = File(...),
+    questions: Optional[List[str]] = None,
+    answers: Optional[List[str]] = None
+):
+    """
+    Create productivity and efficiency metrics analysis from file upload and optional questions/answers.
+    """
+    try:
+        # Process the uploaded file
+        file_analysis = document_processor.process_uploaded_file(file)
+        
+        # Extract questions and answers from file
+        extracted_qa = file_analysis.get("extracted_data", {}).get("questions_answers", [])
+        extracted_questions = [qa.get("question", "") for qa in extracted_qa]
+        extracted_answers = [qa.get("answer", "") for qa in extracted_qa]
+        
+        # Combine with provided questions and answers
+        all_questions = (questions or []) + extracted_questions
+        all_answers = (answers or []) + extracted_answers
+        
+        if not all_questions or not all_answers:
+            raise HTTPException(status_code=400, detail="No questions and answers found in file or provided")
+        
+        import json
+        # Create enhanced prompt with file context
+        enhanced_prompt = f"""
+        {prompt_for_productivity_metrics.format(questions=all_questions, answers=all_answers)}
+        
+        Additional file context:
+        Document type: {file_analysis.get('file_type', 'unknown')}
+        Overall summary: {json.dumps(file_analysis.get('overall_summary', {}))}
+        """
+        
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt_for_productivity_metrics},
+                {"role": "user", "content": enhanced_prompt}
+            ],
+            temperature=0.3,
+            max_tokens=1000
+        )
+        result_text = response.choices[0].message.content.strip()
+        
+        # Try to parse the JSON response
+        import json
+        try:
+            result = json.loads(result_text)
+            # Add file context to result
+            result["file_context"] = {
+                "file_type": file_analysis.get("file_type"),
+                "file_summary": file_analysis.get("overall_summary"),
+                "extracted_questions_count": len(extracted_questions),
+                "provided_questions_count": len(questions or [])
+            }
+            return result
+        except json.JSONDecodeError:
+            raise HTTPException(
+                status_code=500, 
+                detail="Error parsing productivity metrics response. Please try again."
+            )
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing productivity metrics with file: {str(e)}")
+
+@app.post("/maturity-score-light")
+async def maturity_score_light(request: MaturityScoreLightRequest):
+    """
+    Create maturity score (light) analysis synthesizing all Q1-Q14 assessments.
+    Returns comprehensive maturity analysis with overall score, components, and development roadmap.
+    """
+    try:
+        prompt_ = prompt_for_maturity_score_light.format(questions=request.questions, answers=request.answers)
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt_for_maturity_score_light},
+                {"role": "user", "content": prompt_}
+            ],
+            temperature=0.3,
+            max_tokens=800
+        )
+        result_text = response.choices[0].message.content.strip()
+        
+        # Try to parse the JSON response
+        import json
+        try:
+            result = json.loads(result_text)
+            return result
+        except json.JSONDecodeError:
+            # Fallback if JSON parsing fails
+            raise HTTPException(
+                status_code=500, 
+                detail="Error parsing maturity score light response. Please try again."
+            )
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing maturity score light: {str(e)}")
+
+@app.post("/maturity-score-light-with-file")
+async def maturity_score_light_with_file(
+    file: UploadFile = File(...),
+    questions: Optional[List[str]] = None,
+    answers: Optional[List[str]] = None
+):
+    """
+    Create maturity score (light) analysis from file upload and optional questions/answers.
+    """
+    try:
+        # Process the uploaded file
+        file_analysis = document_processor.process_uploaded_file(file)
+        
+        # Extract questions and answers from file
+        extracted_qa = file_analysis.get("extracted_data", {}).get("questions_answers", [])
+        extracted_questions = [qa.get("question", "") for qa in extracted_qa]
+        extracted_answers = [qa.get("answer", "") for qa in extracted_qa]
+        
+        # Combine with provided questions and answers
+        all_questions = (questions or []) + extracted_questions
+        all_answers = (answers or []) + extracted_answers
+        
+        if not all_questions or not all_answers:
+            raise HTTPException(status_code=400, detail="No questions and answers found in file or provided")
+        
+        import json
+        # Create enhanced prompt with file context
+        enhanced_prompt = f"""
+        {prompt_for_maturity_score_light.format(questions=all_questions, answers=all_answers)}
+        
+        Additional file context:
+        Document type: {file_analysis.get('file_type', 'unknown')}
+        Overall summary: {json.dumps(file_analysis.get('overall_summary', {}))}
+        """
+        
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt_for_maturity_score_light},
+                {"role": "user", "content": enhanced_prompt}
+            ],
+            temperature=0.3,
+            max_tokens=1000
+        )
+        result_text = response.choices[0].message.content.strip()
+        
+        # Try to parse the JSON response
+        import json
+        try:
+            result = json.loads(result_text)
+            # Add file context to result
+            result["file_context"] = {
+                "file_type": file_analysis.get("file_type"),
+                "file_summary": file_analysis.get("overall_summary"),
+                "extracted_questions_count": len(extracted_questions),
+                "provided_questions_count": len(questions or [])
+            }
+            return result
+        except json.JSONDecodeError:
+            raise HTTPException(
+                status_code=500, 
+                detail="Error parsing maturity score light response. Please try again."
+            )
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing maturity score light with file: {str(e)}")
                 
 @app.get("/")
 async def root():
