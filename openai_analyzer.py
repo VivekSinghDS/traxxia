@@ -1386,7 +1386,7 @@ class FileUploadResponse(BaseModel):
     extracted_answers: List[str]
     combined_analysis: dict
 
-@app.post("/analyze", response_model=AnalyzeResponse)
+@app.post("/analyze")
 async def analyze_qa(request: AnalyzeRequest):
     """
     Analyze a question-answer pair and provide validation feedback.
@@ -1412,19 +1412,17 @@ async def analyze_qa(request: AnalyzeRequest):
         import json
         try:
             result = json.loads(result_text)
-            return AnalyzeResponse(**result)
+            return result
         except json.JSONDecodeError:
             # Fallback if JSON parsing fails
-            return AnalyzeResponse(
-                valid=False,
-                feedback="Error parsing AI response. Please try again."
-            )
+            raise None
+            
         
             
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error analyzing question-answer pair: {str(e)}")
 
-@app.post("/analyze_all", response_model=AnalyzeResponse)
+@app.post("/analyze_all")
 async def analyze_all_qa(request: AnalyzeAllRequest):
     """
     Analyze a list of question-answer pairs and provide validation feedback.
@@ -1445,7 +1443,7 @@ async def analyze_all_qa(request: AnalyzeAllRequest):
         import json
         try:    
             result = json.loads(result_text)
-            return AnalyzeResponse(**result)
+            return result 
         except json.JSONDecodeError:
             return AnalyzeResponse(
                 valid=False,
@@ -1709,7 +1707,7 @@ async def upload_and_analyze(file: UploadFile = File(...), questions: Optional[L
     # except Exception as e:
     #     raise HTTPException(status_code=500, detail=f"Error processing file upload: {str(e)}")
 
-@app.post("/full-swot-portfolio", response_model=AnalyzeResponse)
+@app.post("/full-swot-portfolio")
 async def full_swot_portfolio(request: FullSwotPortfolioRequest):
     """
     Create comprehensive SWOT portfolio analysis from all questions and answers.
@@ -1732,7 +1730,7 @@ async def full_swot_portfolio(request: FullSwotPortfolioRequest):
         import json
         try:
             result = json.loads(result_text)
-            return AnalyzeResponse(**result)
+            return result
         except json.JSONDecodeError:
             # Fallback if JSON parsing fails
             raise HTTPException(
@@ -2016,7 +2014,7 @@ async def expanded_capability_heatmap_with_file(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error analyzing expanded capability heatmap with file: {str(e)}")
 
-@app.post("/strategic-radar", response_model=AnalyzeResponse)
+@app.post("/strategic-radar")
 async def strategic_radar(request: StrategicRadarRequest):
     """
     Create strategic radar assessment with multi-dimensional analysis.
@@ -2039,7 +2037,7 @@ async def strategic_radar(request: StrategicRadarRequest):
         import json
         try:
             result = json.loads(result_text)
-            return AnalyzeResponse(**result)
+            return result
         except json.JSONDecodeError:
             # Fallback if JSON parsing fails
             raise HTTPException(
@@ -2117,7 +2115,7 @@ async def strategic_radar_with_file(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error analyzing strategic radar with file: {str(e)}")
 
-@app.post("/maturity-scoring", response_model=AnalyzeResponse)
+@app.post("/maturity-scoring")
 async def maturity_scoring(request: MaturityScoringRequest):
     """
     Create comprehensive maturity scoring with cross-dimensional analysis.
@@ -2140,7 +2138,7 @@ async def maturity_scoring(request: MaturityScoringRequest):
         import json
         try:
             result = json.loads(result_text)
-            return AnalyzeResponse(**result)
+            return result
         except json.JSONDecodeError:
             # Fallback if JSON parsing fails
             raise HTTPException(
@@ -2240,7 +2238,7 @@ async def competitive_advantage(request: CompetitiveAdvantageRequest):
         import json
         try:
             result = json.loads(result_text)
-            return AnalyzeResponse(**result)
+            return result
         except json.JSONDecodeError:
             # Fallback if JSON parsing fails
             raise HTTPException(
@@ -2826,6 +2824,7 @@ async def maturity_score_light_with_file(
 @app.get("/")
 async def root():
     return {"message": "OpenAI Question-Answer Analyzer API", "endpoint": "/analyze"}
+
 
 if __name__ == "__main__":
     import uvicorn
