@@ -1300,6 +1300,524 @@ Guidelines:
 - Format of the output should not change, it should be a valid JSON object and of the same format as the example provided.
 '''
 
+system_prompt_for_pestel_analysis = '''
+You are a PESTEL analysis expert. You will be given questions and answers about a company's business context and external environment.
+Your task is to create a comprehensive PESTEL analysis identifying Political, Economic, Social, Technological, Environmental, and Legal factors affecting the business.
+
+Focus on:
+1. External environment analysis across all PESTEL dimensions
+2. Impact assessment and strategic implications
+3. Risk identification and opportunity recognition
+4. Strategic recommendations and monitoring framework
+5. Agility and adaptation requirements
+6. ALWAYS ANSWER IN JSON
+
+ALWAYS PROVIDE JSON OUTPUT AND NOTHING ELSE, AS THIS IS GOING TO BE PARSED. DO NOT USE BACKTICKS LIKE ``` OR ANYTHING ELSE, JUST PROVIDE JSON OUTPUT AND NOTHING ELSE, AS THIS IS GOING TO BE PARSED
+'''
+
+prompt_for_pestel_analysis = '''
+Analyze the following questions and answers to create a comprehensive PESTEL analysis:
+
+Questions: {questions}
+Answers: {answers}
+
+Create PESTEL analysis and return it in the following JSON format:
+{{
+    "pestel_analysis": {{
+        "executive_summary": {{
+            "dominant_factors": ["AI adoption trends", "Regulatory changes in LATAM"],
+            "critical_risks": ["New tax laws for digital products"],
+            "key_opportunities": ["Surge in AI usage", "Market expansion in Chile"],
+            "strategic_recommendations": ["Automate processes", "Expand to Chile"],
+            "agility_priority_score": 7
+        }},
+        "factor_summary": {{
+            "political": {{
+                "total_mentions": 2,
+                "high_impact_count": 1,
+                "key_themes": ["Tax regulations", "Digital product laws"],
+                "strategic_priority": "High"
+            }},
+            "economic": {{
+                "total_mentions": 3,
+                "high_impact_count": 2,
+                "key_themes": ["Market expansion", "Revenue growth"],
+                "strategic_priority": "High"
+            }},
+            "social": {{
+                "total_mentions": 2,
+                "high_impact_count": 1,
+                "key_themes": ["Customer preferences", "Work culture"],
+                "strategic_priority": "Medium"
+            }},
+            "technological": {{
+                "total_mentions": 4,
+                "high_impact_count": 3,
+                "key_themes": ["AI adoption", "Automation", "Digital transformation"],
+                "strategic_priority": "High"
+            }},
+            "environmental": {{
+                "total_mentions": 1,
+                "high_impact_count": 0,
+                "key_themes": ["Remote work"],
+                "strategic_priority": "Low"
+            }},
+            "legal": {{
+                "total_mentions": 2,
+                "high_impact_count": 1,
+                "key_themes": ["Tax compliance", "Digital regulations"],
+                "strategic_priority": "High"
+            }}
+        }},
+        "strategic_recommendations": {{
+            "immediate_actions": [
+                {{
+                    "action": "Implement automation for low-value tasks",
+                    "rationale": "Address technological efficiency gap",
+                    "timeline": "2-3 months",
+                    "resources_required": "Development team, automation tools",
+                    "success_metrics": ["Process efficiency improvement", "Cost reduction"]
+                }}
+            ],
+            "short_term_initiatives": [
+                {{
+                    "initiative": "Launch mobile app development",
+                    "strategic_pillar": "Technology and Digitization",
+                    "expected_outcome": "Enhanced customer experience",
+                    "risk_mitigation": "Addresses competitive pressure"
+                }}
+            ],
+            "long_term_strategic_shifts": [
+                {{
+                    "shift": "Expand to Chile market",
+                    "transformation_required": "Market entry strategy",
+                    "competitive_advantage": "First-mover advantage in new market",
+                    "sustainability": "Diversified revenue streams"
+                }}
+            ]
+        }},
+        "monitoring_dashboard": {{
+            "key_indicators": [
+                {{
+                    "indicator": "AI adoption rate in target market",
+                    "pestel_factor": "Technological",
+                    "measurement_frequency": "Quarterly",
+                    "threshold_values": {{
+                        "green": ">60% adoption",
+                        "yellow": "30-60% adoption",
+                        "red": "<30% adoption"
+                    }}
+                }}
+            ],
+            "early_warning_signals": [
+                {{
+                    "signal": "New digital tax regulations",
+                    "trigger_response": "Immediate compliance review",
+                    "monitoring_source": "Government regulatory updates"
+                }}
+            ]
+        }}
+    }}
+}}
+
+Guidelines:
+- Extract external factors from all questions, especially Q2 (market context), Q10 (external factors), Q4 (competitive landscape)
+- Analyze political factors from regulatory mentions and market entry considerations
+- Evaluate economic factors from market size, growth potential, and revenue projections
+- Assess social factors from customer behavior, work culture, and demographic trends
+- Identify technological factors from AI adoption, automation needs, and digital transformation
+- Consider environmental factors from remote work and sustainability mentions
+- Analyze legal factors from tax regulations, compliance requirements, and market entry laws
+- Calculate impact scores and strategic priorities based on frequency and business impact
+- Provide actionable recommendations with clear timelines and success metrics
+- Format of the output should not change, it should be a valid JSON object and of the same format as the example provided.
+'''
+
+system_prompt_for_strategic_analysis = '''
+You are a strategic analysis expert using the STRATEGIC framework. You will be given questions and answers about a company's strategic position and capabilities.
+Your task is to create a comprehensive strategic analysis across all STRATEGIC pillars: Strategy, Tactics, Resources, Analysis & Data, Technology & Digitization, Execution, Governance, Innovation, and Culture.
+
+Focus on:
+1. Multi-dimensional strategic assessment across all STRATEGIC pillars
+2. VUCA factor identification and strategic maturity assessment
+3. Cross-pillar synthesis and holistic recommendations
+4. Agile framework recommendations and implementation roadmap
+5. Risk assessment and success benchmarking
+6. ALWAYS ALWAYS PROVIDE VALID JSON OUTPUT, NEVER INVALID JSON
+
+ALWAYS PROVIDE JSON OUTPUT AND NOTHING ELSE, AS THIS IS GOING TO BE PARSED. DO NOT USE BACKTICKS LIKE ``` OR ANYTHING ELSE, JUST PROVIDE JSON OUTPUT AND NOTHING ELSE, AS THIS IS GOING TO BE PARSED
+'''
+
+prompt_for_strategic_analysis = '''
+Analyze the following questions and answers to create a comprehensive strategic analysis using the STRATEGIC framework:
+
+Questions: {questions}
+Answers: {answers}
+
+Create strategic analysis and return it in the following JSON format:
+{{
+    "strategic_analysis": {{
+        "executive_summary": {{
+            "situation_overview": "Growing company in AI education space with strong customer focus but operational efficiency gaps",
+            "primary_vuca_factors": ["Uncertainty", "Complexity"],
+            "key_strategic_themes": ["Digital Transformation", "Market Expansion", "Operational Excellence"],
+            "urgency_level": "Medium",
+            "strategic_maturity_assessment": "Developing"
+        }},
+        "strategic_pillars_analysis": {{
+            "strategy": {{
+                "pillar_code": "S",
+                "relevance_score": 8.5,
+                "current_state": {{
+                    "strengths": ["Clear differentiators", "Strong customer focus"],
+                    "weaknesses": ["Limited market expansion", "Operational inefficiencies"],
+                    "assessment_score": 7.0
+                }},
+                "recommendations": [
+                    {{
+                        "action": "Develop comprehensive market expansion strategy",
+                        "priority": "High",
+                        "timeline": "3 months",
+                        "resources_required": ["Market research", "Strategic planning team"],
+                        "expected_impact": "Increased market reach and revenue growth"
+                    }}
+                ],
+                "success_metrics": [
+                    {{
+                        "metric": "Market expansion progress",
+                        "target": "Chile market entry by Q3 2025",
+                        "measurement_frequency": "Monthly"
+                    }}
+                ]
+            }},
+            "tactics": {{
+                "pillar_code": "T",
+                "relevance_score": 7.0,
+                "current_state": {{
+                    "strengths": ["Effective sales channels", "Strong referral program"],
+                    "weaknesses": ["Limited automation", "Manual processes"],
+                    "assessment_score": 6.5
+                }},
+                "recommendations": [
+                    {{
+                        "action": "Implement marketing automation tools",
+                        "priority": "High",
+                        "timeline": "2 months",
+                        "resources_required": ["Automation platform", "Training"],
+                        "expected_impact": "Improved efficiency and scalability"
+                    }}
+                ],
+                "success_metrics": [
+                    {{
+                        "metric": "Process automation rate",
+                        "target": "60% of manual tasks automated",
+                        "measurement_frequency": "Weekly"
+                    }}
+                ]
+            }},
+            "resources": {{
+                "pillar_code": "R",
+                "relevance_score": 6.5,
+                "current_state": {{
+                    "strengths": ["Experienced team", "Strong customer relationships"],
+                    "weaknesses": ["Limited headcount", "Resource constraints"],
+                    "assessment_score": 6.0
+                }},
+                "recommendations": [
+                    {{
+                        "action": "Optimize resource allocation and hiring plan",
+                        "priority": "Medium",
+                        "timeline": "6 months",
+                        "resources_required": ["HR support", "Budget allocation"],
+                        "expected_impact": "Better resource utilization and growth capacity"
+                    }}
+                ],
+                "success_metrics": [
+                    {{
+                        "metric": "Employee productivity",
+                        "target": "20% improvement",
+                        "measurement_frequency": "Monthly"
+                    }}
+                ]
+            }},
+            "analysis_and_data": {{
+                "pillar_code": "A",
+                "relevance_score": 5.5,
+                "current_state": {{
+                    "strengths": ["Customer feedback collection"],
+                    "weaknesses": ["Limited analytics capabilities", "Data infrastructure"],
+                    "assessment_score": 4.0
+                }},
+                "recommendations": [
+                    {{
+                        "action": "Implement advanced analytics and data infrastructure",
+                        "priority": "Medium",
+                        "timeline": "4 months",
+                        "resources_required": ["Analytics tools", "Data engineer"],
+                        "expected_impact": "Better decision-making and insights"
+                    }}
+                ],
+                "success_metrics": [
+                    {{
+                        "metric": "Data-driven decisions",
+                        "target": "80% of decisions supported by data",
+                        "measurement_frequency": "Monthly"
+                    }}
+                ]
+            }},
+            "technology_and_digitization": {{
+                "pillar_code": "T2",
+                "relevance_score": 8.0,
+                "current_state": {{
+                    "strengths": ["Digital product delivery"],
+                    "weaknesses": ["Limited automation", "Manual processes"],
+                    "assessment_score": 5.5
+                }},
+                "recommendations": [
+                    {{
+                        "action": "Develop mobile app and enhance digital platform",
+                        "priority": "High",
+                        "timeline": "6 months",
+                        "resources_required": ["Development team", "Mobile app platform"],
+                        "expected_impact": "Enhanced customer experience and accessibility"
+                    }}
+                ],
+                "success_metrics": [
+                    {{
+                        "metric": "Digital platform usage",
+                        "target": "90% customer adoption",
+                        "measurement_frequency": "Weekly"
+                    }}
+                ]
+            }},
+            "execution": {{
+                "pillar_code": "E",
+                "relevance_score": 7.5,
+                "current_state": {{
+                    "strengths": ["Customer service excellence", "Team execution"],
+                    "weaknesses": ["Process standardization", "Operational efficiency"],
+                    "assessment_score": 6.5
+                }},
+                "recommendations": [
+                    {{
+                        "action": "Standardize core processes and workflows",
+                        "priority": "High",
+                        "timeline": "3 months",
+                        "resources_required": ["Process documentation", "Training"],
+                        "expected_impact": "Improved consistency and efficiency"
+                    }}
+                ],
+                "success_metrics": [
+                    {{
+                        "metric": "Process efficiency",
+                        "target": "30% improvement",
+                        "measurement_frequency": "Monthly"
+                    }}
+                ]
+            }},
+            "governance": {{
+                "pillar_code": "G",
+                "relevance_score": 6.0,
+                "current_state": {{
+                    "strengths": ["Clear decision-making", "Agile culture"],
+                    "weaknesses": ["Limited formal governance", "Risk management"],
+                    "assessment_score": 5.5
+                }},
+                "recommendations": [
+                    {{
+                        "action": "Establish formal governance framework",
+                        "priority": "Medium",
+                        "timeline": "4 months",
+                        "resources_required": ["Governance framework", "Risk management tools"],
+                        "expected_impact": "Better risk management and compliance"
+                    }}
+                ],
+                "success_metrics": [
+                    {{
+                        "metric": "Governance maturity",
+                        "target": "Level 3 maturity",
+                        "measurement_frequency": "Quarterly"
+                    }}
+                ]
+            }},
+            "innovation": {{
+                "pillar_code": "I",
+                "relevance_score": 7.0,
+                "current_state": {{
+                    "strengths": ["Customer-centric approach", "Market responsiveness"],
+                    "weaknesses": ["Limited R&D investment", "Innovation processes"],
+                    "assessment_score": 6.0
+                }},
+                "recommendations": [
+                    {{
+                        "action": "Establish innovation processes and R&D investment",
+                        "priority": "Medium",
+                        "timeline": "6 months",
+                        "resources_required": ["Innovation team", "R&D budget"],
+                        "expected_impact": "Enhanced competitive advantage"
+                    }}
+                ],
+                "success_metrics": [
+                    {{
+                        "metric": "Innovation pipeline",
+                        "target": "3 new products/services per year",
+                        "measurement_frequency": "Quarterly"
+                    }}
+                ]
+            }},
+            "culture": {{
+                "pillar_code": "C",
+                "relevance_score": 8.5,
+                "current_state": {{
+                    "strengths": ["Collaborative culture", "Fast-paced environment"],
+                    "weaknesses": ["Limited formal culture programs"],
+                    "assessment_score": 7.5
+                }},
+                "recommendations": [
+                    {{
+                        "action": "Formalize culture programs and values",
+                        "priority": "Low",
+                        "timeline": "6 months",
+                        "resources_required": ["Culture programs", "Values documentation"],
+                        "expected_impact": "Enhanced employee engagement and retention"
+                    }}
+                ],
+                "success_metrics": [
+                    {{
+                        "metric": "Employee satisfaction",
+                        "target": "85% satisfaction rate",
+                        "measurement_frequency": "Quarterly"
+                    }}
+                ]
+            }}
+        }},
+        "cross_pillar_synthesis": {{
+            "interconnections": [
+                {{
+                    "pillars": ["Technology and Digitization", "Execution"],
+                    "relationship": "Technology enables better execution",
+                    "synergy_opportunity": "Automate execution processes"
+                }}
+            ],
+            "holistic_recommendations": [
+                "Focus on technology-enabled execution improvements",
+                "Prioritize market expansion with operational excellence"
+            ]
+        }},
+        "agile_frameworks_recommendations": {{
+            "scrum": {{
+                "applicability": "High for product development",
+                "use_cases": ["Mobile app development", "Feature development"],
+                "implementation_priority": "High"
+            }},
+            "kanban": {{
+                "applicability": "Medium for operations",
+                "use_cases": ["Process improvement", "Customer support"],
+                "implementation_priority": "Medium"
+            }},
+            "okrs": {{
+                "applicability": "High for strategic alignment",
+                "use_cases": ["Strategic goal tracking", "Team alignment"],
+                "implementation_priority": "High"
+            }}
+        }},
+        "risk_assessment": {{
+            "strategic_risks": [
+                {{
+                    "risk": "Market entry failure in Chile",
+                    "probability": "Medium",
+                    "impact": "High",
+                    "mitigation": "Thorough market research and pilot program",
+                    "owner": "Strategy team"
+                }}
+            ],
+            "contingency_plans": [
+                {{
+                    "scenario": "Regulatory changes in target markets",
+                    "response": "Immediate compliance review and strategy adjustment",
+                    "trigger_indicators": ["New tax laws", "Digital regulations"]
+                }}
+            ]
+        }},
+        "success_benchmarks": {{
+            "case_study_parallels": [
+                {{
+                    "company": "Duolingo",
+                    "parallel": "Digital education platform expansion",
+                    "applicable_lesson": "Mobile-first approach and gamification",
+                    "success_metric": "User engagement and retention"
+                }}
+            ],
+            "industry_benchmarks": [
+                {{
+                    "metric": "Customer retention rate",
+                    "industry_average": "70%",
+                    "target": "85%",
+                    "timeframe": "12 months"
+                }}
+            ]
+        }},
+        "implementation_roadmap": {{
+            "phase_1": {{
+                "duration": "3 months",
+                "focus": "Operational efficiency and automation",
+                "key_initiatives": ["Process automation", "Mobile app development"],
+                "budget": "$100,000",
+                "success_criteria": ["30% efficiency improvement", "App beta launch"]
+            }},
+            "phase_2": {{
+                "duration": "6 months",
+                "focus": "Market expansion and analytics",
+                "key_initiatives": ["Chile market entry", "Analytics implementation"],
+                "budget": "$200,000",
+                "success_criteria": ["Market entry success", "Data-driven decisions"]
+            }},
+            "phase_3": {{
+                "duration": "12 months",
+                "focus": "Scale and innovation",
+                "key_initiatives": ["Product innovation", "Geographic expansion"],
+                "budget": "$300,000",
+                "success_criteria": ["3 new products", "2 new markets"]
+            }}
+        }},
+        "monitoring_and_feedback": {{
+            "dashboard_requirements": ["KPI tracking", "Progress monitoring", "Risk alerts"],
+            "review_cycles": {{
+                "weekly": "Team progress updates",
+                "monthly": "KPI review and adjustments",
+                "quarterly": "Strategic review and planning",
+                "annual": "Comprehensive strategy assessment"
+            }},
+            "feedback_loops": [
+                {{
+                    "source": "Customer feedback",
+                    "frequency": "Weekly",
+                    "integration_point": "Product development"
+                }}
+            ]
+        }}
+    }}
+}}
+
+Guidelines:
+- Analyze all questions comprehensively, especially Q1-Q14 for strategic context
+- Assess each STRATEGIC pillar based on relevant question responses:
+  * Strategy (S): Q1, Q8, Q9 - strategic clarity and differentiators
+  * Tactics (T): Q4, Q11 - competitive tactics and channel effectiveness
+  * Resources (R): Q12, Q14 - organizational capabilities and productivity
+  * Analysis & Data (A): Q6, Q12 - data capabilities and analytics
+  * Technology & Digitization (T2): Q7, Q9 - technology needs and digital transformation
+  * Execution (E): Q7, Q12 - operational execution and capabilities
+  * Governance (G): Q13, Q14 - organizational governance and culture
+  * Innovation (I): Q9, Q12 - innovation capabilities and strategic goals
+  * Culture (C): Q13, Q14 - organizational culture and employee metrics
+- Use 0-10 scoring scale for relevance and assessment scores
+- Identify VUCA factors from market uncertainty and complexity
+- Provide actionable recommendations with clear priorities and timelines
+- Include cross-pillar synthesis and holistic recommendations
+- Format of the output should not change, it should be a valid JSON object and of the same format as the example provided.
+'''
+
 class AnalyzeRequest(BaseModel):
     question: str
     answer: str
@@ -1385,6 +1903,14 @@ class FileUploadResponse(BaseModel):
     extracted_questions: List[str]
     extracted_answers: List[str]
     combined_analysis: dict
+
+class PestelAnalysisRequest(BaseModel):
+    questions: list[str]
+    answers: list[str]
+
+class StrategicAnalysisRequest(BaseModel):
+    questions: list[str]
+    answers: list[str]
 
 @app.post("/analyze")
 async def analyze_qa(request: AnalyzeRequest):
@@ -2820,7 +3346,210 @@ async def maturity_score_light_with_file(
             
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error analyzing maturity score light with file: {str(e)}")
-                
+
+@app.post("/pestel-analysis")
+async def pestel_analysis(request: PestelAnalysisRequest):
+    """
+    Create comprehensive PESTEL analysis from questions and answers.
+    Returns detailed PESTEL analysis with strategic implications and monitoring framework.
+    """
+    try:
+        prompt_ = prompt_for_pestel_analysis.format(questions=request.questions, answers=request.answers)
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt_for_pestel_analysis},
+                {"role": "user", "content": prompt_}
+            ],
+            temperature=0.3,
+            max_tokens=1000
+        )
+        result_text = response.choices[0].message.content.strip()
+        
+        # Try to parse the JSON response
+        import json
+        try:
+            result = json.loads(result_text)
+            return result
+        except json.JSONDecodeError:
+            # Fallback if JSON parsing fails
+            raise HTTPException(
+                status_code=500, 
+                detail="Error parsing PESTEL analysis response. Please try again."
+            )
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing PESTEL analysis: {str(e)}")
+
+@app.post("/pestel-analysis-with-file")
+async def pestel_analysis_with_file(
+    file: UploadFile = File(...),
+    questions: Optional[List[str]] = None,
+    answers: Optional[List[str]] = None
+):
+    """
+    Create comprehensive PESTEL analysis from file upload and optional questions/answers.
+    """
+    try:
+        # Process the uploaded file
+        file_analysis = document_processor.process_uploaded_file(file)
+        
+        # Extract questions and answers from file
+        extracted_qa = file_analysis.get("extracted_data", {}).get("questions_answers", [])
+        extracted_questions = [qa.get("question", "") for qa in extracted_qa]
+        extracted_answers = [qa.get("answer", "") for qa in extracted_qa]
+        
+        # Combine with provided questions and answers
+        all_questions = (questions or []) + extracted_questions
+        all_answers = (answers or []) + extracted_answers
+        
+        if not all_questions or not all_answers:
+            raise HTTPException(status_code=400, detail="No questions and answers found in file or provided")
+        
+        import json
+        # Create enhanced prompt with file context
+        enhanced_prompt = f"""
+        {prompt_for_pestel_analysis.format(questions=all_questions, answers=all_answers)}
+        
+        Additional file context:
+        Document type: {file_analysis.get('file_type', 'unknown')}
+        Overall summary: {json.dumps(file_analysis.get('overall_summary', {}))}
+        """
+        
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt_for_pestel_analysis},
+                {"role": "user", "content": enhanced_prompt}
+            ],
+            temperature=0.3,
+            max_tokens=1200
+        )
+        result_text = response.choices[0].message.content.strip()
+        
+        # Try to parse the JSON response
+        import json
+        try:
+            result = json.loads(result_text)
+            # Add file context to result
+            result["file_context"] = {
+                "file_type": file_analysis.get("file_type"),
+                "file_summary": file_analysis.get("overall_summary"),
+                "extracted_questions_count": len(extracted_questions),
+                "provided_questions_count": len(questions or [])
+            }
+            return result
+        except json.JSONDecodeError:
+            raise HTTPException(
+                status_code=500, 
+                detail="Error parsing PESTEL analysis response. Please try again."
+            )
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing PESTEL analysis with file: {str(e)}")
+
+@app.post("/strategic-analysis")
+async def strategic_analysis(request: StrategicAnalysisRequest):
+    """
+    Create comprehensive strategic analysis using the STRATEGIC framework from questions and answers.
+    Returns detailed strategic analysis with multi-dimensional assessment and implementation roadmap.
+    """
+    try:
+        prompt_ = prompt_for_strategic_analysis.format(questions=request.questions, answers=request.answers)
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt_for_strategic_analysis},
+                {"role": "user", "content": prompt_}
+            ],
+            temperature=0.3,
+            max_tokens=3000
+        )
+        result_text = response.choices[0].message.content.strip()
+        
+        # Try to parse the JSON response
+        import json
+        try:
+            result = json.loads(result_text)
+            return result
+        except json.JSONDecodeError:
+            # Fallback if JSON parsing fails
+            raise HTTPException(
+                status_code=500, 
+                detail="Error parsing strategic analysis response. Please try again."
+            )
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing strategic analysis: {str(e)}")
+
+@app.post("/strategic-analysis-with-file")
+async def strategic_analysis_with_file(
+    file: UploadFile = File(...),
+    questions: Optional[List[str]] = None,
+    answers: Optional[List[str]] = None
+):
+    """
+    Create comprehensive strategic analysis using the STRATEGIC framework from file upload and optional questions/answers.
+    """
+    try:
+        # Process the uploaded file
+        file_analysis = document_processor.process_uploaded_file(file)
+        
+        # Extract questions and answers from file
+        extracted_qa = file_analysis.get("extracted_data", {}).get("questions_answers", [])
+        extracted_questions = [qa.get("question", "") for qa in extracted_qa]
+        extracted_answers = [qa.get("answer", "") for qa in extracted_qa]
+        
+        # Combine with provided questions and answers
+        all_questions = (questions or []) + extracted_questions
+        all_answers = (answers or []) + extracted_answers
+        
+        if not all_questions or not all_answers:
+            raise HTTPException(status_code=400, detail="No questions and answers found in file or provided")
+        
+        import json
+        # Create enhanced prompt with file context
+        enhanced_prompt = f"""
+        {prompt_for_strategic_analysis.format(questions=all_questions, answers=all_answers)}
+        
+        Additional file context:
+        Document type: {file_analysis.get('file_type', 'unknown')}
+        Overall summary: {json.dumps(file_analysis.get('overall_summary', {}))}
+        """
+        
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt_for_strategic_analysis},
+                {"role": "user", "content": enhanced_prompt}
+            ],
+            temperature=0.3,
+            max_tokens=1400
+        )
+        result_text = response.choices[0].message.content.strip()
+        
+        # Try to parse the JSON response
+        import json
+        try:
+            result = json.loads(result_text)
+            # Add file context to result
+            result["file_context"] = {
+                "file_type": file_analysis.get("file_type"),
+                "file_summary": file_analysis.get("overall_summary"),
+                "extracted_questions_count": len(extracted_questions),
+                "provided_questions_count": len(questions or [])
+            }
+            print(result)
+            return result
+        except json.JSONDecodeError:
+            raise HTTPException(
+                status_code=500, 
+                detail="Error parsing strategic analysis response. Please try again."
+            )
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing strategic analysis with file: {str(e)}")
+
 @app.get("/")
 async def root():
     return {"message": "OpenAI Question-Answer Analyzer API", "endpoint": "/analyze"}
