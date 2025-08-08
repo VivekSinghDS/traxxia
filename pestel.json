@@ -1,0 +1,97 @@
+{
+    "pestel_analysis": {
+      "executive_summary": {
+        "dominant_factors": [],
+        "critical_risks": [],
+        "key_opportunities": [],
+        "strategic_recommendations": [],
+        "agility_priority_score": 0
+      },
+      "factor_summary": {
+        "political": {
+          "total_mentions": 0,
+          "high_impact_count": 0,
+          "key_themes": [],
+          "strategic_priority": "High|Medium|Low"
+        },
+        "economic": {
+          "total_mentions": 0,
+          "high_impact_count": 0,
+          "key_themes": [],
+          "strategic_priority": "High|Medium|Low"
+        },
+        "social": {
+          "total_mentions": 0,
+          "high_impact_count": 0,
+          "key_themes": [],
+          "strategic_priority": "High|Medium|Low"
+        },
+        "technological": {
+          "total_mentions": 0,
+          "high_impact_count": 0,
+          "key_themes": [],
+          "strategic_priority": "High|Medium|Low"
+        },
+        "environmental": {
+          "total_mentions": 0,
+          "high_impact_count": 0,
+          "key_themes": [],
+          "strategic_priority": "High|Medium|Low"
+        },
+        "legal": {
+          "total_mentions": 0,
+          "high_impact_count": 0,
+          "key_themes": [],
+          "strategic_priority": "High|Medium|Low"
+        }
+      },
+      "strategic_recommendations": {
+        "immediate_actions": [
+          {
+            "action": "Specific action item",
+            "rationale": "Why this action is needed",
+            "timeline": "Implementation timeline",
+            "resources_required": "Resource requirements",
+            "success_metrics": ["Metric 1", "Metric 2"]
+          }
+        ],
+        "short_term_initiatives": [
+          {
+            "initiative": "Initiative description",
+            "strategic_pillar": "Which STRATEGIC model pillar this addresses",
+            "expected_outcome": "Expected result",
+            "risk_mitigation": "How this addresses identified risks"
+          }
+        ],
+        "long_term_strategic_shifts": [
+          {
+            "shift": "Strategic shift description",
+            "transformation_required": "What needs to change",
+            "competitive_advantage": "How this creates advantage",
+            "sustainability": "Long-term viability"
+          }
+        ]
+      },
+      "monitoring_dashboard": {
+        "key_indicators": [
+          {
+            "indicator": "Specific metric to track",
+            "pestel_factor": "Related PESTEL category",
+            "measurement_frequency": "How often to measure",
+            "threshold_values": {
+              "green": "Safe zone values",
+              "yellow": "Caution zone values", 
+              "red": "Critical zone values"
+            }
+          }
+        ],
+        "early_warning_signals": [
+          {
+            "signal": "What to watch for",
+            "trigger_response": "What action to take when detected",
+            "monitoring_source": "Where to get this information"
+          }
+        ]
+      }
+    }
+  }
