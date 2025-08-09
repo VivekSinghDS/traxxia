@@ -13,11 +13,26 @@ import json
 from openai import OpenAI
 import cv2
 import numpy as np
-
+from openai import OpenAI
 # Configure logging
+from dotenv import load_dotenv
+
+load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+def perform_web_search(questions, answers):
+    response = client.chat.completions.create(
+            model="gpt-4.1",
+            messages=[
+                {"role": "system", "content": "YOUR TASK IS TO PROVIDE ONLY COMPANY NAME FOR WHICH THIS ANSWERS ARE ABOUT. DO NOT PROVIDE ANYTHING ELSE THAN THAT"},
+                {"role": "user", "content": f"{answers}"}
+            ],
+            temperature=0.3,
+            
+        )
+    return response.choices[0].message.content
 class DocumentProcessor:
     def __init__(self, openai_api_key: str):
         self.client = OpenAI(api_key=openai_api_key)

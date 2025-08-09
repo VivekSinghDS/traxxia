@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File
 from pydantic import BaseModel
 from openai import OpenAI
 import os
@@ -7,7 +7,7 @@ from typing import Optional, List
 from fastapi.middleware.cors import CORSMiddleware
 from swot_analysis import SWOTNewsAnalyzer
 from dotenv import load_dotenv
-from helpers import DocumentProcessor
+from helpers import DocumentProcessor, perform_web_search
 load_dotenv()
 app = FastAPI(title="OpenAI Question-Answer Analyzer")
 app.add_middleware(
@@ -1818,6 +1818,213 @@ Guidelines:
 - Format of the output should not change, it should be a valid JSON object and of the same format as the example provided.
 '''
 
+# Add PORTER analysis prompts after strategic analysis prompts
+system_prompt_for_porter_analysis = '''
+You are a Porter's Five Forces analysis expert. You will be given questions and answers about a company's business context and competitive environment.
+Your task is to create a comprehensive Porter's Five Forces analysis examining the competitive forces in the industry: Threat of New Entrants, Bargaining Power of Suppliers, Bargaining Power of Buyers, Threat of Substitute Products/Services, and Competitive Rivalry.
+
+Focus on:
+1. Industry structure analysis across all five forces
+2. Competitive intensity assessment and strategic implications
+3. Entry barriers and competitive advantages identification
+4. Market power distribution and value chain analysis
+5. Strategic recommendations and competitive positioning
+6. ALWAYS ANSWER IN JSON
+
+ALWAYS PROVIDE JSON OUTPUT AND NOTHING ELSE, AS THIS IS GOING TO BE PARSED. DO NOT USE BACKTICKS LIKE ``` OR ANYTHING ELSE, JUST PROVIDE JSON OUTPUT AND NOTHING ELSE, AS THIS IS GOING TO BE PARSED
+'''
+
+prompt_for_porter_analysis = '''
+Analyze the following questions and answers to create a comprehensive Porter's Five Forces analysis:
+
+Questions: {questions}
+Answers: {answers}
+
+Create Porter's Five Forces analysis and return it in the following JSON format:
+{{
+    "porter_analysis": {{
+        "executive_summary": {{
+            "industry_attractiveness": "Moderate",
+            "overall_competitive_intensity": "High",
+            "key_competitive_forces": ["Threat of New Entrants", "Competitive Rivalry"],
+            "strategic_implications": ["Focus on differentiation", "Build entry barriers"],
+            "competitive_position": "Challenger"
+        }},
+        "five_forces_analysis": {{
+            "threat_of_new_entrants": {{
+                "intensity": "Medium",
+                "score": 6,
+                "key_factors": [
+                    {{
+                        "factor": "Low capital requirements",
+                        "impact": "High",
+                        "description": "Digital products require minimal upfront investment"
+                    }},
+                    {{
+                        "factor": "Brand loyalty",
+                        "impact": "Medium",
+                        "description": "Established customer relationships provide some protection"
+                    }}
+                ],
+                "entry_barriers": [
+                    "Brand recognition",
+                    "Customer relationships",
+                    "Technology expertise"
+                ],
+                "strategic_implications": "Focus on building strong brand and customer loyalty"
+            }},
+            "bargaining_power_of_suppliers": {{
+                "intensity": "Low",
+                "score": 3,
+                "key_factors": [
+                    {{
+                        "factor": "Multiple supplier options",
+                        "impact": "Low",
+                        "description": "Technology and service providers are abundant"
+                    }}
+                ],
+                "supplier_concentration": "Low",
+                "switching_costs": "Low",
+                "strategic_implications": "Maintain multiple supplier relationships for flexibility"
+            }},
+            "bargaining_power_of_buyers": {{
+                "intensity": "High",
+                "score": 8,
+                "key_factors": [
+                    {{
+                        "factor": "Low switching costs",
+                        "impact": "High",
+                        "description": "Customers can easily switch to competitors"
+                    }},
+                    {{
+                        "factor": "Price sensitivity",
+                        "impact": "High",
+                        "description": "Customers are price-conscious in this market"
+                    }}
+                ],
+                "buyer_concentration": "Low",
+                "product_differentiation": "Medium",
+                "strategic_implications": "Focus on value proposition and customer retention"
+            }},
+            "threat_of_substitute_products": {{
+                "intensity": "Medium",
+                "score": 5,
+                "key_factors": [
+                    {{
+                        "factor": "Alternative learning methods",
+                        "impact": "Medium",
+                        "description": "Traditional education and self-learning options exist"
+                    }}
+                ],
+                "substitute_availability": "High",
+                "switching_costs": "Low",
+                "strategic_implications": "Emphasize unique value proposition and outcomes"
+            }},
+            "competitive_rivalry": {{
+                "intensity": "High",
+                "score": 8,
+                "key_factors": [
+                    {{
+                        "factor": "Many competitors",
+                        "impact": "High",
+                        "description": "Numerous players in the education technology space"
+                    }},
+                    {{
+                        "factor": "Low differentiation",
+                        "impact": "High",
+                        "description": "Similar offerings across competitors"
+                    }}
+                ],
+                "competitor_concentration": "Medium",
+                "industry_growth": "High",
+                "strategic_implications": "Focus on differentiation and niche positioning"
+            }}
+        }},
+        "competitive_landscape": {{
+            "direct_competitors": [
+                {{
+                    "name": "Competitor A",
+                    "market_share": "25%",
+                    "strengths": ["Brand recognition", "Large customer base"],
+                    "weaknesses": ["High costs", "Slow innovation"]
+                }}
+            ],
+            "indirect_competitors": [
+                {{
+                    "name": "Traditional Education",
+                    "threat_level": "Medium",
+                    "competitive_advantage": "Established credibility"
+                }}
+            ],
+            "potential_entrants": [
+                {{
+                    "category": "Tech companies",
+                    "likelihood": "High",
+                    "barriers": "Brand building, customer acquisition"
+                }}
+            ]
+        }},
+        "strategic_recommendations": {{
+            "immediate_actions": [
+                {{
+                    "action": "Strengthen brand differentiation",
+                    "rationale": "Address high competitive rivalry",
+                    "timeline": "3-6 months",
+                    "resources_required": ["Marketing budget", "Brand strategy"],
+                    "expected_impact": "Reduced price sensitivity"
+                }}
+            ],
+            "short_term_initiatives": [
+                {{
+                    "initiative": "Build customer loyalty programs",
+                    "strategic_pillar": "Customer Retention",
+                    "expected_outcome": "Reduced buyer bargaining power",
+                    "risk_mitigation": "Addresses switching costs"
+                }}
+            ],
+            "long_term_strategic_shifts": [
+                {{
+                    "shift": "Develop proprietary technology",
+                    "transformation_required": "R&D investment",
+                    "competitive_advantage": "Entry barrier creation",
+                    "sustainability": "Long-term competitive moat"
+                }}
+            ]
+        }},
+        "monitoring_dashboard": {{
+            "key_indicators": [
+                {{
+                    "indicator": "New competitor entry rate",
+                    "force": "Threat of New Entrants",
+                    "measurement_frequency": "Quarterly",
+                    "threshold_values": {{
+                        "green": "<2 new entrants/year",
+                        "yellow": "2-5 new entrants/year",
+                        "red": ">5 new entrants/year"
+                    }}
+                }}
+            ],
+            "early_warning_signals": [
+                {{
+                    "signal": "Major tech company entering market",
+                    "trigger_response": "Immediate competitive analysis",
+                    "monitoring_source": "Industry news and announcements"
+                }}
+            ]
+        }}
+    }}
+}}
+
+Guidelines:
+- Analyze all five forces comprehensively based on the questions and answers
+- Use 1-10 scoring scale for each force (1=Very Low, 10=Very High)
+- Identify key factors influencing each force
+- Assess competitive landscape and market structure
+- Provide actionable strategic recommendations
+- Include monitoring framework for ongoing analysis
+- Format of the output should not change, it should be a valid JSON object and of the same format as the example provided.
+'''
+
 class AnalyzeRequest(BaseModel):
     question: str
     answer: str
@@ -1909,6 +2116,10 @@ class PestelAnalysisRequest(BaseModel):
     answers: list[str]
 
 class StrategicAnalysisRequest(BaseModel):
+    questions: list[str]
+    answers: list[str]
+
+class PorterAnalysisRequest(BaseModel):
     questions: list[str]
     answers: list[str]
 
@@ -3348,38 +3559,57 @@ async def maturity_score_light_with_file(
         raise HTTPException(status_code=500, detail=f"Error analyzing maturity score light with file: {str(e)}")
 
 @app.post("/pestel-analysis")
-async def pestel_analysis(request: PestelAnalysisRequest):
+async def pestel_analysis(request_: PestelAnalysisRequest, request: Request):
     """
     Create comprehensive PESTEL analysis from questions and answers.
     Returns detailed PESTEL analysis with strategic implications and monitoring framework.
     """
-    try:
-        prompt_ = prompt_for_pestel_analysis.format(questions=request.questions, answers=request.answers)
+    # try:
+    prompt_ = prompt_for_pestel_analysis.format(questions=request_.questions, answers=request_.answers)
+    
+    payload = [
+            {"role": "system", "content": system_prompt_for_pestel_analysis},
+            {"role": "user", "content": prompt_},
+        ]
+    if request.headers.get('deep_search'):
+        web_data: str = perform_web_search(request_.questions, request_.answers)
+        print(web_data)
+        payload += [{"role": "user", "content": f"Here is the company name for web searching \n {web_data}"}]
+    
+        # print(payload)
+        response = client.responses.create(
+            model="gpt-4.1",
+            input=payload,
+            tools=[{"type": "web_search_preview", "search_context_size": "low"}],
+        )
+        assistant_text = ""
+        for message in response.output:
+            if message.type == "message":
+                for content in message.content:
+                    if content.type == "output_text":
+                        assistant_text += content.text
+    else:
         response = client.chat.completions.create(
             model="gpt-4o",
-            messages=[
-                {"role": "system", "content": system_prompt_for_pestel_analysis},
-                {"role": "user", "content": prompt_}
-            ],
+            messages=payload,
             temperature=0.3,
-            max_tokens=1000
+            max_tokens=1200
         )
-        result_text = response.choices[0].message.content.strip()
-        
-        # Try to parse the JSON response
-        import json
-        try:
-            result = json.loads(result_text)
-            return result
-        except json.JSONDecodeError:
-            # Fallback if JSON parsing fails
-            raise HTTPException(
-                status_code=500, 
-                detail="Error parsing PESTEL analysis response. Please try again."
-            )
+        assistant_text = response.choices[0].message.content.strip()
+    # Try to parse the JSON response
+    import json
+    try:
+        result = json.loads(assistant_text)
+        return result
+    except json.JSONDecodeError:
+        # Fallback if JSON parsing fails
+        raise HTTPException(
+            status_code=500, 
+            detail="Error parsing PESTEL analysis response. Please try again."
+        )
             
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error analyzing PESTEL analysis: {str(e)}")
+    # except Exception as e:
+    #     raise HTTPException(status_code=500, detail=f"Error analyzing PESTEL analysis: {str(e)}")
 
 @app.post("/pestel-analysis-with-file")
 async def pestel_analysis_with_file(
@@ -3549,6 +3779,107 @@ async def strategic_analysis_with_file(
             
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error analyzing strategic analysis with file: {str(e)}")
+
+@app.post("/porter-analysis")
+async def porter_analysis(request: PorterAnalysisRequest):
+    """
+    Create comprehensive Porter's Five Forces analysis from questions and answers.
+    Returns detailed Porter's Five Forces analysis with competitive landscape and strategic implications.
+    """
+    try:
+        prompt_ = prompt_for_porter_analysis.format(questions=request.questions, answers=request.answers)
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt_for_porter_analysis},
+                {"role": "user", "content": prompt_}
+            ],
+            temperature=0.3,
+            max_tokens=2000
+        )
+        result_text = response.choices[0].message.content.strip()
+        
+        # Try to parse the JSON response
+        import json
+        try:
+            result = json.loads(result_text)
+            return result
+        except json.JSONDecodeError:
+            # Fallback if JSON parsing fails
+            raise HTTPException(
+                status_code=500, 
+                detail="Error parsing Porter analysis response. Please try again."
+            )
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing Porter analysis: {str(e)}")
+
+@app.post("/porter-analysis-with-file")
+async def porter_analysis_with_file(
+    file: UploadFile = File(...),
+    questions: Optional[List[str]] = None,
+    answers: Optional[List[str]] = None
+):
+    """
+    Create comprehensive Porter's Five Forces analysis from file upload and optional questions/answers.
+    """
+    try:
+        # Process the uploaded file
+        file_analysis = document_processor.process_uploaded_file(file)
+        
+        # Extract questions and answers from file
+        extracted_qa = file_analysis.get("extracted_data", {}).get("questions_answers", [])
+        extracted_questions = [qa.get("question", "") for qa in extracted_qa]
+        extracted_answers = [qa.get("answer", "") for qa in extracted_qa]
+        
+        # Combine with provided questions and answers
+        all_questions = (questions or []) + extracted_questions
+        all_answers = (answers or []) + extracted_answers
+        
+        if not all_questions or not all_answers:
+            raise HTTPException(status_code=400, detail="No questions and answers found in file or provided")
+        
+        import json
+        # Create enhanced prompt with file context
+        enhanced_prompt = f"""
+        {prompt_for_porter_analysis.format(questions=all_questions, answers=all_answers)}
+        
+        Additional file context:
+        Document type: {file_analysis.get('file_type', 'unknown')}
+        Overall summary: {json.dumps(file_analysis.get('overall_summary', {}))}
+        """
+        
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt_for_porter_analysis},
+                {"role": "user", "content": enhanced_prompt}
+            ],
+            temperature=0.3,
+            max_tokens=2000
+        )
+        result_text = response.choices[0].message.content.strip()
+        
+        # Try to parse the JSON response
+        import json
+        try:
+            result = json.loads(result_text)
+            # Add file context to result
+            result["file_context"] = {
+                "file_type": file_analysis.get("file_type"),
+                "file_summary": file_analysis.get("overall_summary"),
+                "extracted_questions_count": len(extracted_questions),
+                "provided_questions_count": len(questions or [])
+            }
+            return result
+        except json.JSONDecodeError:
+            raise HTTPException(
+                status_code=500, 
+                detail="Error parsing Porter analysis response. Please try again."
+            )
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing Porter analysis with file: {str(e)}")
 
 @app.get("/")
 async def root():
