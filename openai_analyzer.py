@@ -3573,7 +3573,6 @@ async def pestel_analysis(request_: PestelAnalysisRequest, request: Request):
         ]
     if request.headers.get('deep_search'):
         web_data: str = perform_web_search(request_.questions, request_.answers)
-        print(web_data)
         payload += [{"role": "user", "content": f"Here is the company name for web searching \n {web_data}"}]
     
         # print(payload)
@@ -3679,28 +3678,51 @@ async def pestel_analysis_with_file(
         raise HTTPException(status_code=500, detail=f"Error analyzing PESTEL analysis with file: {str(e)}")
 
 @app.post("/strategic-analysis")
-async def strategic_analysis(request: StrategicAnalysisRequest):
+async def strategic_analysis(request_: StrategicAnalysisRequest, request: Request):
     """
     Create comprehensive strategic analysis using the STRATEGIC framework from questions and answers.
     Returns detailed strategic analysis with multi-dimensional assessment and implementation roadmap.
     """
     try:
-        prompt_ = prompt_for_strategic_analysis.format(questions=request.questions, answers=request.answers)
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
+        prompt_ = prompt_for_strategic_analysis.format(questions=request_.questions, answers=request_.answers)
+        payload = [
                 {"role": "system", "content": system_prompt_for_strategic_analysis},
                 {"role": "user", "content": prompt_}
-            ],
-            temperature=0.3,
-            max_tokens=3000
-        )
-        result_text = response.choices[0].message.content.strip()
+            ]
+        
+        if request.headers.get('deep_search'):
+            web_data: str = perform_web_search(request_.questions, request_.answers)
+            payload += [{"role": "user", "content": f"Here is the company name for web searching \n {web_data}"}]
+        
+            # print(payload)
+            response = client.responses.create(
+                model="gpt-4.1",
+                input=payload,
+                max_output_tokens=5000,
+                tools=[{"type": "web_search_preview", "search_context_size": "low"}],
+                
+            )
+            assistant_text = ""
+            for message in response.output:
+                if message.type == "message":
+                    for content in message.content:
+                        if content.type == "output_text":
+                            assistant_text += content.text
+        else:
+            
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=payload,
+                temperature=0.3,
+                max_tokens=3000
+            )
+            assistant_text = response.choices[0].message.content.strip()
         
         # Try to parse the JSON response
         import json
         try:
-            result = json.loads(result_text)
+            print(assistant_text)
+            result = json.loads(assistant_text)
             return result
         except json.JSONDecodeError:
             # Fallback if JSON parsing fails
