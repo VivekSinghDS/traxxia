@@ -7,3 +7,6 @@ fastapi
 uvicorn
 python-dotenv
 requests
+googlesearch-python 
+requests 
+trafilatura

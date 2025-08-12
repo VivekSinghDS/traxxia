@@ -7,7 +7,7 @@ from typing import Optional, List
 from fastapi.middleware.cors import CORSMiddleware
 from swot_analysis import SWOTNewsAnalyzer
 from dotenv import load_dotenv
-from helpers import DocumentProcessor, perform_web_search
+from helpers import DocumentProcessor, fetch_top_articles, perform_web_search
 load_dotenv()
 app = FastAPI(title="OpenAI Question-Answer Analyzer")
 app.add_middleware(
@@ -22,7 +22,7 @@ load_dotenv()
 analyzer = SWOTNewsAnalyzer(api_key=os.getenv("NEWSAPI_API_KEY", "d1b3658c875546baa970b0ff36887ac3")) 
 # Configure OpenAI
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
+INCOMPLETE_QA_PAYLOAD = [{"role": "user", "content": "ADD `NOT ENOUGH DATA` TO THE VALUES IF YOU FEEL THE DATA IS NOT ENOUGH"}]
 prompt = """
         Analyze the following question and answer pair. Determine if the answer is valid for 
         competitor analysis or not
@@ -968,50 +968,28 @@ Answers: {answers}
 Create strategic goals analysis and return it in the following JSON format:
 {{
     "strategicGoals": {{
-        "year": 2025,
+        "year": "<year>",
         "objectives": [
             {{
-                "objective": "Expand into Chile",
-                "priority": 1,
+                "objective": "<objective_description>",
+                "priority": "<priority_number>",
                 "keyResults": [
                     {{
-                        "metric": "Market launch date",
-                        "target": "Q3 2025",
-                        "current": "Planning phase",
-                        "progress": 25
+                        "metric": "<metric_name>",
+                        "target": "<target_value_or_date>",
+                        "current": "<current_value_or_status>",
+                        "progress": "<progress_percentage>"
                     }}
                 ],
-                "alignment": "growth"
-            }},
-            {{
-                "objective": "Launch mobile app",
-                "priority": 2,
-                "keyResults": [
-                    {{
-                        "metric": "App launch date",
-                        "target": "Q4 2025",
-                        "current": "Development",
-                        "progress": 40
-                    }}
-                ],
-                "alignment": "innovation"
-            }},
-            {{
-                "objective": "Reduce churn below 15%",
-                "priority": 3,
-                "keyResults": [
-                    {{
-                        "metric": "Customer churn rate",
-                        "target": 15,
-                        "current": 22,
-                        "progress": 32
-                    }}
-                ],
-                "alignment": "retention"
+                "alignment": "<growth|innovation|retention|other>"
             }}
         ],
-        "overallProgress": 32,
-        "strategicThemes": ["geographic_expansion", "digital_transformation", "customer_retention"]
+        "overallProgress": "<overall_progress_percentage>",
+        "strategicThemes": [
+            "<theme_1>",
+            "<theme_2>",
+            "<theme_3>"
+        ]
     }}
 }}
 
@@ -1133,27 +1111,39 @@ Answers: {answers}
 Create culture profile analysis and return it in the following JSON format:
 {{
     "cultureProfile": {{
-        "values": ["collaborative", "fast-paced", "data-driven"],
-        "behaviors": ["autonomy", "execution-focused"],
+        "values": [
+            "{{value_1}}",
+            "{{value_2}}",
+            "{{value_3}}"
+            # Add more values if needed (e.g., 'innovative', 'customer-focused')
+        ],
+        "behaviors": [
+            "{{behavior_1}}",
+            "{{behavior_2}}"
+            # Add more behaviors if applicable (e.g., 'collaborative', 'risk-taking')
+        ],
         "workStyle": {{
-            "pace": "fast",
-            "decisionMaking": "autonomous",
-            "orientation": "results-driven"
+            "pace": "{{work_pace}}",  # e.g., 'fast', 'steady'
+            "decisionMaking": "{{decision_style}}",  # e.g., 'autonomous', 'consensus-driven'
+            "orientation": "{{work_orientation}}"  # e.g., 'results-driven', 'quality-focused'
         }},
         "employeeMetrics": {{
-            "totalEmployees": 8,
-            "costPercentage": 60,
-            "valuePerEmployee": 35000,
-            "productivity": "above_average"
+            "totalEmployees": "{{total_employees}}",  # Number of employees included in the culture context
+            "costPercentage": "{{employee_cost_pct}}",  # % of total costs attributed to employees
+            "valuePerEmployee": "{{value_per_employee}}",  # Output or revenue per employee
+            "productivity": "{{productivity_level}}"  # Qualitative label like 'above_average', 'low', etc.
         }},
-        "cultureType": "Entrepreneurial",
+        "cultureType": "{{culture_type}}",  # e.g., 'Entrepreneurial', 'Hierarchical', 'Collaborative'
         "cultureFit": {{
-            "withStrategy": "high",
-            "withMarket": "high",
-            "withCapabilities": "medium"
+            "withStrategy": "{{fit_with_strategy}}",  # Fit rating with strategy: 'high', 'medium', 'low'
+            "withMarket": "{{fit_with_market}}",  # Fit rating with market: 'high', etc.
+            "withCapabilities": "{{fit_with_capabilities}}"  # Fit rating with org capabilities: 'medium', etc.
         }}
     }}
 }}
+
+
+
 
 Guidelines:
 - Extract cultural values and behaviors from Q13 culture description
@@ -1253,41 +1243,46 @@ Questions: {questions}
 Answers: {answers}
 
 Create maturity score analysis and return it in the following JSON format:
-{{
+ {{
     "maturityScore": {{
-        "overallScore": 3.2,
-        "level": "Defined",
+        "overallScore": "{{overall_score}}",  # Overall maturity score (e.g., 3.2)
+        "level": "{{maturity_level}}",  # Maturity level label (e.g., 'Defined', 'Managed')
         "components": {{
-            "strategicClarity": 3.8,
-            "marketAlignment": 3.5,
-            "customerFocus": 4.2,
-            "operationalCapability": 2.8,
-            "competitivePosition": 3.5,
-            "organizationalHealth": 3.4
+            "strategicClarity": "{{strategic_clarity}}",  # Score for strategic clarity
+            "marketAlignment": "{{market_alignment}}",  # Score for alignment with market
+            "customerFocus": "{{customer_focus}}",  # Score reflecting customer-centric practices
+            "operationalCapability": "{{operational_capability}}",  # Score for operational strength
+            "competitivePosition": "{{competitive_position}}",  # Score showing competitive differentiation
+            "organizationalHealth": "{{organizational_health}}"  # Score for team/org health and sustainability
         }},
-        "maturityProfile": "Customer-Led Growth",
+        "maturityProfile": "{{maturity_profile}}",  # Descriptive profile of current maturity (e.g., 'Customer-Led Growth')
         "strengths": [
-            "Strong customer orientation",
-            "Clear differentiators",
-            "Agile culture"
+            "{{strength_1}}",
+            "{{strength_2}}",
+            "{{strength_3}}"
+            # Add more as needed
         ],
         "developmentAreas": [
-            "Operational automation",
-            "Analytics capabilities",
-            "Process standardization"
+            "{{development_area_1}}",
+            "{{development_area_2}}",
+            "{{development_area_3}}"
+            # Add more if needed
         ],
         "nextLevel": {{
-            "target": "Managed (Level 4)",
+            "target": "{{next_maturity_level}}",  # Next maturity level (e.g., 'Managed (Level 4)')
             "requirements": [
-                "Implement marketing automation",
-                "Enhance data analytics capabilities",
-                "Systematize competitive advantages",
-                "Standardize core processes"
+                "{{requirement_1}}",
+                "{{requirement_2}}",
+                "{{requirement_3}}",
+                "{{requirement_4}}"
+                # Add or remove based on actual needs
             ],
-            "estimatedTimeframe": "12-18 months"
+            "estimatedTimeframe": "{{timeframe}}"  # Time estimate to reach next level (e.g., '12-18 months')
         }}
     }}
 }}
+
+
 
 Guidelines:
 - Cross-reference all assessments from Q1-Q14 to synthesize maturity indicators
@@ -1325,100 +1320,138 @@ Create PESTEL analysis and return it in the following JSON format:
 {{
     "pestel_analysis": {{
         "executive_summary": {{
-            "dominant_factors": ["AI adoption trends", "Regulatory changes in LATAM"],
-            "critical_risks": ["New tax laws for digital products"],
-            "key_opportunities": ["Surge in AI usage", "Market expansion in Chile"],
-            "strategic_recommendations": ["Automate processes", "Expand to Chile"],
-            "agility_priority_score": 7
+            "dominant_factors": [
+                "{{dominant_factor_1}}",
+                "{{dominant_factor_2}}"
+                # Add more dominant factors as needed
+            ],
+            "critical_risks": [
+                "{{critical_risk_1}}"
+                # Add more if needed
+            ],
+            "key_opportunities": [
+                "{{opportunity_1}}",
+                "{{opportunity_2}}"
+            ],
+            "strategic_recommendations": [
+                "{{recommendation_1}}",
+                "{{recommendation_2}}"
+            ],
+            "agility_priority_score": "{{agility_score}}"  # Score (e.g., 1–10) representing how fast the org should adapt
         }},
         "factor_summary": {{
             "political": {{
-                "total_mentions": 2,
-                "high_impact_count": 1,
-                "key_themes": ["Tax regulations", "Digital product laws"],
-                "strategic_priority": "High"
+                "total_mentions": "{{political_mentions}}",  # Total mentions in analysis
+                "high_impact_count": "{{political_high_impact}}",  # High impact factors count
+                "key_themes": [
+                    "{{political_theme_1}}",
+                    "{{political_theme_2}}"
+                ],
+                "strategic_priority": "{{political_priority}}"  # Priority level (e.g., High, Medium, Low)
             }},
             "economic": {{
-                "total_mentions": 3,
-                "high_impact_count": 2,
-                "key_themes": ["Market expansion", "Revenue growth"],
-                "strategic_priority": "High"
+                "total_mentions": "{{economic_mentions}}",
+                "high_impact_count": "{{economic_high_impact}}",
+                "key_themes": [
+                    "{{economic_theme_1}}",
+                    "{{economic_theme_2}}"
+                ],
+                "strategic_priority": "{{economic_priority}}"
             }},
             "social": {{
-                "total_mentions": 2,
-                "high_impact_count": 1,
-                "key_themes": ["Customer preferences", "Work culture"],
-                "strategic_priority": "Medium"
+                "total_mentions": "{{social_mentions}}",
+                "high_impact_count": "{{social_high_impact}}",
+                "key_themes": [
+                    "{{social_theme_1}}",
+                    "{{social_theme_2}}"
+                ],
+                "strategic_priority": "{{social_priority}}"
             }},
             "technological": {{
-                "total_mentions": 4,
-                "high_impact_count": 3,
-                "key_themes": ["AI adoption", "Automation", "Digital transformation"],
-                "strategic_priority": "High"
+                "total_mentions": "{{tech_mentions}}",
+                "high_impact_count": "{{tech_high_impact}}",
+                "key_themes": [
+                    "{{tech_theme_1}}",
+                    "{{tech_theme_2}}",
+                    "{{tech_theme_3}}"
+                ],
+                "strategic_priority": "{{tech_priority}}"
             }},
             "environmental": {{
-                "total_mentions": 1,
-                "high_impact_count": 0,
-                "key_themes": ["Remote work"],
-                "strategic_priority": "Low"
+                "total_mentions": "{{env_mentions}}",
+                "high_impact_count": "{{env_high_impact}}",
+                "key_themes": [
+                    "{{env_theme_1}}"
+                ],
+                "strategic_priority": "{{env_priority}}"
             }},
             "legal": {{
-                "total_mentions": 2,
-                "high_impact_count": 1,
-                "key_themes": ["Tax compliance", "Digital regulations"],
-                "strategic_priority": "High"
+                "total_mentions": "{{legal_mentions}}",
+                "high_impact_count": "{{legal_high_impact}}",
+                "key_themes": [
+                    "{{legal_theme_1}}",
+                    "{{legal_theme_2}}"
+                ],
+                "strategic_priority": "{{legal_priority}}"
             }}
         }},
         "strategic_recommendations": {{
             "immediate_actions": [
                 {{
-                    "action": "Implement automation for low-value tasks",
-                    "rationale": "Address technological efficiency gap",
-                    "timeline": "2-3 months",
-                    "resources_required": "Development team, automation tools",
-                    "success_metrics": ["Process efficiency improvement", "Cost reduction"]
+                    "action": "{{immediate_action}}",  # Specific short-term task
+                    "rationale": "{{rationale_for_action}}",  # Why this action is needed
+                    "timeline": "{{timeline}}",  # Expected timeframe (e.g., "2-3 months")
+                    "resources_required": "{{resources}}",  # Resources needed to execute
+                    "success_metrics": [
+                        "{{metric_1}}",
+                        "{{metric_2}}"
+                    ]  # KPIs or outcomes expected
                 }}
+                # Add more immediate actions if needed
             ],
             "short_term_initiatives": [
                 {{
-                    "initiative": "Launch mobile app development",
-                    "strategic_pillar": "Technology and Digitization",
-                    "expected_outcome": "Enhanced customer experience",
-                    "risk_mitigation": "Addresses competitive pressure"
+                    "initiative": "{{initiative_name}}",  # Name of the short-term project
+                    "strategic_pillar": "{{pillar}}",  # Aligned pillar (e.g., Technology, Market Expansion)
+                    "expected_outcome": "{{expected_result}}",  # Anticipated result
+                    "risk_mitigation": "{{risk_strategy}}"  # How risks are handled
                 }}
             ],
             "long_term_strategic_shifts": [
                 {{
-                    "shift": "Expand to Chile market",
-                    "transformation_required": "Market entry strategy",
-                    "competitive_advantage": "First-mover advantage in new market",
-                    "sustainability": "Diversified revenue streams"
+                    "shift": "{{long_term_shift}}",  # Long-term change (e.g., market expansion)
+                    "transformation_required": "{{transformation_type}}",  # What kind of change is required
+                    "competitive_advantage": "{{advantage}}",  # Strategic advantage gained
+                    "sustainability": "{{sustainability_benefit}}"  # Long-term impact
                 }}
             ]
         }},
         "monitoring_dashboard": {{
             "key_indicators": [
                 {{
-                    "indicator": "AI adoption rate in target market",
-                    "pestel_factor": "Technological",
-                    "measurement_frequency": "Quarterly",
+                    "indicator": "{{kpi_name}}",  # Name of the key indicator
+                    "pestel_factor": "{{related_factor}}",  # PESTEL category this indicator maps to
+                    "measurement_frequency": "{{frequency}}",  # e.g., Monthly, Quarterly
                     "threshold_values": {{
-                        "green": ">60% adoption",
-                        "yellow": "30-60% adoption",
-                        "red": "<30% adoption"
+                        "green": "{{green_threshold}}",  # e.g., ">60%"
+                        "yellow": "{{yellow_threshold}}",  # e.g., "30-60%"
+                        "red": "{{red_threshold}}"  # e.g., "<30%"
                     }}
                 }}
             ],
             "early_warning_signals": [
                 {{
-                    "signal": "New digital tax regulations",
-                    "trigger_response": "Immediate compliance review",
-                    "monitoring_source": "Government regulatory updates"
+                    "signal": "{{warning_signal}}",  # Description of the risk signal
+                    "trigger_response": "{{trigger_response}}",  # Immediate action to take if triggered
+                    "monitoring_source": "{{source}}"  # Where this signal is monitored (e.g., government updates)
                 }}
             ]
         }}
     }}
 }}
+
+
+
 
 Guidelines:
 - Extract external factors from all questions, especially Q2 (market context), Q10 (external factors), Q4 (competitive landscape)
@@ -1444,7 +1477,7 @@ Focus on:
 4. Agile framework recommendations and implementation roadmap
 5. Risk assessment and success benchmarking
 6. ALWAYS ALWAYS PROVIDE VALID JSON OUTPUT, NEVER INVALID JSON
-
+7. JUST PROVIDE JSON AND NOTHING ELSE, DO NOT PROVIDE ``` OR WRAP THINGS UP, JUST A VALID JSON
 ALWAYS PROVIDE JSON OUTPUT AND NOTHING ELSE, AS THIS IS GOING TO BE PARSED. DO NOT USE BACKTICKS LIKE ``` OR ANYTHING ELSE, JUST PROVIDE JSON OUTPUT AND NOTHING ELSE, AS THIS IS GOING TO BE PARSED
 '''
 
@@ -1456,343 +1489,474 @@ Answers: {answers}
 
 Create strategic analysis and return it in the following JSON format:
 {{
+    // STRATEGIC ANALYSIS FRAMEWORK TEMPLATE
+    // This template provides a comprehensive framework for analyzing organizations using the STAR-TG-IC model
+    // (Strategy, Tactics, Analysis & Data, Resources, Technology & Digitization, Governance, Innovation, Culture)
+    // along with execution considerations and implementation roadmaps.
+    
     "strategic_analysis": {{
+        
+        // EXECUTIVE SUMMARY SECTION
+        // Provides high-level overview and assessment of the organization's strategic position
         "executive_summary": {{
-            "situation_overview": "Growing company in AI education space with strong customer focus but operational efficiency gaps",
-            "primary_vuca_factors": ["Uncertainty", "Complexity"],
-            "key_strategic_themes": ["Digital Transformation", "Market Expansion", "Operational Excellence"],
-            "urgency_level": "Medium",
-            "strategic_maturity_assessment": "Developing"
+            // Brief description of the organization's current situation, industry, and context
+            "situation_overview": "[Insert 1-2 sentence summary of organization's current state, industry, and key challenges/opportunities]",
+            
+            // VUCA factors most relevant to this organization (Volatility, Uncertainty, Complexity, Ambiguity)
+            "primary_vuca_factors": ["[Select from: Volatility, Uncertainty, Complexity, Ambiguity]"],
+            
+            // Main strategic themes identified from analysis (e.g., Digital Transformation, Market Expansion, etc.)
+            "key_strategic_themes": ["[Theme 1]", "[Theme 2]", "[Theme 3]"],
+            
+            // How urgent is strategic intervention needed? (Low/Medium/High)
+            "urgency_level": "[Low/Medium/High]",
+            
+            // Current strategic maturity level (Emerging/Developing/Mature/Leading)
+            "strategic_maturity_assessment": "[Emerging/Developing/Mature/Leading]"
         }},
+        
+        // STRATEGIC PILLARS ANALYSIS SECTION
+        // Detailed analysis of each pillar in the STAR-TG-IC framework
         "strategic_pillars_analysis": {{
+            
+            // STRATEGY PILLAR
+            // Focuses on strategic direction, market positioning, competitive advantage
             "strategy": {{
                 "pillar_code": "S",
-                "relevance_score": 8.5,
+                // Relevance score 1-10 based on how critical this pillar is for the organization
+                "relevance_score": "[1-10 based on importance to organization]",
                 "current_state": {{
-                    "strengths": ["Clear differentiators", "Strong customer focus"],
-                    "weaknesses": ["Limited market expansion", "Operational inefficiencies"],
-                    "assessment_score": 7.0
+                    // Key strategic strengths (market position, differentiation, vision clarity, etc.)
+                    "strengths": ["[Strategic strength 1]", "[Strategic strength 2]"],
+                    // Strategic gaps and weaknesses (unclear positioning, limited differentiation, etc.)
+                    "weaknesses": ["[Strategic weakness 1]", "[Strategic weakness 2]"],
+                    // Overall assessment score for current strategic state (1-10)
+                    "assessment_score": "[1-10 score]"
                 }},
                 "recommendations": [
                     {{
-                        "action": "Develop comprehensive market expansion strategy",
-                        "priority": "High",
-                        "timeline": "3 months",
-                        "resources_required": ["Market research", "Strategic planning team"],
-                        "expected_impact": "Increased market reach and revenue growth"
+                        // Specific strategic action to be taken
+                        "action": "[Specific strategic recommendation]",
+                        // Priority level: High/Medium/Low
+                        "priority": "[High/Medium/Low]",
+                        // Expected timeline for completion
+                        "timeline": "[X weeks/months]",
+                        // Resources, skills, or tools needed
+                        "resources_required": ["[Resource 1]", "[Resource 2]"],
+                        // Expected business impact
+                        "expected_impact": "[Description of expected outcomes]"
                     }}
                 ],
                 "success_metrics": [
                     {{
-                        "metric": "Market expansion progress",
-                        "target": "Chile market entry by Q3 2025",
-                        "measurement_frequency": "Monthly"
+                        // What will be measured
+                        "metric": "[Specific metric name]",
+                        // Target value or outcome
+                        "target": "[Specific target or goal]",
+                        // How often to measure
+                        "measurement_frequency": "[Weekly/Monthly/Quarterly]"
                     }}
                 ]
             }},
+            
+            // TACTICS PILLAR
+            // Focuses on marketing, sales, customer acquisition, and go-to-market execution
             "tactics": {{
                 "pillar_code": "T",
-                "relevance_score": 7.0,
+                "relevance_score": "[1-10 based on importance to organization]",
                 "current_state": {{
-                    "strengths": ["Effective sales channels", "Strong referral program"],
-                    "weaknesses": ["Limited automation", "Manual processes"],
-                    "assessment_score": 6.5
+                    // Tactical execution strengths (effective channels, strong campaigns, etc.)
+                    "strengths": ["[Tactical strength 1]", "[Tactical strength 2]"],
+                    // Tactical weaknesses (poor conversion, limited channels, etc.)
+                    "weaknesses": ["[Tactical weakness 1]", "[Tactical weakness 2]"],
+                    "assessment_score": "[1-10 score]"
                 }},
                 "recommendations": [
                     {{
-                        "action": "Implement marketing automation tools",
-                        "priority": "High",
-                        "timeline": "2 months",
-                        "resources_required": ["Automation platform", "Training"],
-                        "expected_impact": "Improved efficiency and scalability"
+                        "action": "[Specific tactical recommendation]",
+                        "priority": "[High/Medium/Low]",
+                        "timeline": "[X weeks/months]",
+                        "resources_required": ["[Resource 1]", "[Resource 2]"],
+                        "expected_impact": "[Description of expected outcomes]"
                     }}
                 ],
                 "success_metrics": [
                     {{
-                        "metric": "Process automation rate",
-                        "target": "60% of manual tasks automated",
-                        "measurement_frequency": "Weekly"
+                        "metric": "[Specific metric name]",
+                        "target": "[Specific target or goal]",
+                        "measurement_frequency": "[Weekly/Monthly/Quarterly]"
                     }}
                 ]
             }},
+            
+            // RESOURCES PILLAR
+            // Focuses on human resources, financial resources, and resource optimization
             "resources": {{
                 "pillar_code": "R",
-                "relevance_score": 6.5,
+                "relevance_score": "[1-10 based on importance to organization]",
                 "current_state": {{
-                    "strengths": ["Experienced team", "Strong customer relationships"],
-                    "weaknesses": ["Limited headcount", "Resource constraints"],
-                    "assessment_score": 6.0
+                    // Resource strengths (skilled team, adequate funding, etc.)
+                    "strengths": ["[Resource strength 1]", "[Resource strength 2]"],
+                    // Resource constraints and gaps (limited budget, skills gaps, etc.)
+                    "weaknesses": ["[Resource weakness 1]", "[Resource weakness 2]"],
+                    "assessment_score": "[1-10 score]"
                 }},
                 "recommendations": [
                     {{
-                        "action": "Optimize resource allocation and hiring plan",
-                        "priority": "Medium",
-                        "timeline": "6 months",
-                        "resources_required": ["HR support", "Budget allocation"],
-                        "expected_impact": "Better resource utilization and growth capacity"
+                        "action": "[Specific resource recommendation]",
+                        "priority": "[High/Medium/Low]",
+                        "timeline": "[X weeks/months]",
+                        "resources_required": ["[Resource 1]", "[Resource 2]"],
+                        "expected_impact": "[Description of expected outcomes]"
                     }}
                 ],
                 "success_metrics": [
                     {{
-                        "metric": "Employee productivity",
-                        "target": "20% improvement",
-                        "measurement_frequency": "Monthly"
+                        "metric": "[Specific metric name]",
+                        "target": "[Specific target or goal]",
+                        "measurement_frequency": "[Weekly/Monthly/Quarterly]"
                     }}
                 ]
             }},
+            
+            // ANALYSIS AND DATA PILLAR
+            // Focuses on data capabilities, analytics, business intelligence, and data-driven decision making
             "analysis_and_data": {{
                 "pillar_code": "A",
-                "relevance_score": 5.5,
+                "relevance_score": "[1-10 based on importance to organization]",
                 "current_state": {{
-                    "strengths": ["Customer feedback collection"],
-                    "weaknesses": ["Limited analytics capabilities", "Data infrastructure"],
-                    "assessment_score": 4.0
+                    // Data and analytics strengths (good data quality, analytics tools, etc.)
+                    "strengths": ["[Analytics strength 1]", "[Analytics strength 2]"],
+                    // Data and analytics gaps (poor data quality, limited insights, etc.)
+                    "weaknesses": ["[Analytics weakness 1]", "[Analytics weakness 2]"],
+                    "assessment_score": "[1-10 score]"
                 }},
                 "recommendations": [
                     {{
-                        "action": "Implement advanced analytics and data infrastructure",
-                        "priority": "Medium",
-                        "timeline": "4 months",
-                        "resources_required": ["Analytics tools", "Data engineer"],
-                        "expected_impact": "Better decision-making and insights"
+                        "action": "[Specific analytics recommendation]",
+                        "priority": "[High/Medium/Low]",
+                        "timeline": "[X weeks/months]",
+                        "resources_required": ["[Resource 1]", "[Resource 2]"],
+                        "expected_impact": "[Description of expected outcomes]"
                     }}
                 ],
                 "success_metrics": [
                     {{
-                        "metric": "Data-driven decisions",
-                        "target": "80% of decisions supported by data",
-                        "measurement_frequency": "Monthly"
+                        "metric": "[Specific metric name]",
+                        "target": "[Specific target or goal]",
+                        "measurement_frequency": "[Weekly/Monthly/Quarterly]"
                     }}
                 ]
             }},
+            
+            // TECHNOLOGY AND DIGITIZATION PILLAR
+            // Focuses on technology infrastructure, digital capabilities, automation, and digital transformation
             "technology_and_digitization": {{
                 "pillar_code": "T2",
-                "relevance_score": 8.0,
+                "relevance_score": "[1-10 based on importance to organization]",
                 "current_state": {{
-                    "strengths": ["Digital product delivery"],
-                    "weaknesses": ["Limited automation", "Manual processes"],
-                    "assessment_score": 5.5
+                    // Technology strengths (modern systems, good automation, etc.)
+                    "strengths": ["[Technology strength 1]", "[Technology strength 2]"],
+                    // Technology gaps (legacy systems, manual processes, etc.)
+                    "weaknesses": ["[Technology weakness 1]", "[Technology weakness 2]"],
+                    "assessment_score": "[1-10 score]"
                 }},
                 "recommendations": [
                     {{
-                        "action": "Develop mobile app and enhance digital platform",
-                        "priority": "High",
-                        "timeline": "6 months",
-                        "resources_required": ["Development team", "Mobile app platform"],
-                        "expected_impact": "Enhanced customer experience and accessibility"
+                        "action": "[Specific technology recommendation]",
+                        "priority": "[High/Medium/Low]",
+                        "timeline": "[X weeks/months]",
+                        "resources_required": ["[Resource 1]", "[Resource 2]"],
+                        "expected_impact": "[Description of expected outcomes]"
                     }}
                 ],
                 "success_metrics": [
                     {{
-                        "metric": "Digital platform usage",
-                        "target": "90% customer adoption",
-                        "measurement_frequency": "Weekly"
+                        "metric": "[Specific metric name]",
+                        "target": "[Specific target or goal]",
+                        "measurement_frequency": "[Weekly/Monthly/Quarterly]"
                     }}
                 ]
             }},
+            
+            // EXECUTION PILLAR
+            // Focuses on operational excellence, process management, and execution capabilities
             "execution": {{
                 "pillar_code": "E",
-                "relevance_score": 7.5,
+                "relevance_score": "[1-10 based on importance to organization]",
                 "current_state": {{
-                    "strengths": ["Customer service excellence", "Team execution"],
-                    "weaknesses": ["Process standardization", "Operational efficiency"],
-                    "assessment_score": 6.5
+                    // Execution strengths (efficient processes, good delivery, etc.)
+                    "strengths": ["[Execution strength 1]", "[Execution strength 2]"],
+                    // Execution weaknesses (poor processes, delivery issues, etc.)
+                    "weaknesses": ["[Execution weakness 1]", "[Execution weakness 2]"],
+                    "assessment_score": "[1-10 score]"
                 }},
                 "recommendations": [
                     {{
-                        "action": "Standardize core processes and workflows",
-                        "priority": "High",
-                        "timeline": "3 months",
-                        "resources_required": ["Process documentation", "Training"],
-                        "expected_impact": "Improved consistency and efficiency"
+                        "action": "[Specific execution recommendation]",
+                        "priority": "[High/Medium/Low]",
+                        "timeline": "[X weeks/months]",
+                        "resources_required": ["[Resource 1]", "[Resource 2]"],
+                        "expected_impact": "[Description of expected outcomes]"
                     }}
                 ],
                 "success_metrics": [
                     {{
-                        "metric": "Process efficiency",
-                        "target": "30% improvement",
-                        "measurement_frequency": "Monthly"
+                        "metric": "[Specific metric name]",
+                        "target": "[Specific target or goal]",
+                        "measurement_frequency": "[Weekly/Monthly/Quarterly]"
                     }}
                 ]
             }},
+            
+            // GOVERNANCE PILLAR
+            // Focuses on governance structures, risk management, compliance, and decision-making processes
             "governance": {{
                 "pillar_code": "G",
-                "relevance_score": 6.0,
+                "relevance_score": "[1-10 based on importance to organization]",
                 "current_state": {{
-                    "strengths": ["Clear decision-making", "Agile culture"],
-                    "weaknesses": ["Limited formal governance", "Risk management"],
-                    "assessment_score": 5.5
+                    // Governance strengths (clear structures, good compliance, etc.)
+                    "strengths": ["[Governance strength 1]", "[Governance strength 2]"],
+                    // Governance gaps (unclear structures, compliance issues, etc.)
+                    "weaknesses": ["[Governance weakness 1]", "[Governance weakness 2]"],
+                    "assessment_score": "[1-10 score]"
                 }},
                 "recommendations": [
                     {{
-                        "action": "Establish formal governance framework",
-                        "priority": "Medium",
-                        "timeline": "4 months",
-                        "resources_required": ["Governance framework", "Risk management tools"],
-                        "expected_impact": "Better risk management and compliance"
+                        "action": "[Specific governance recommendation]",
+                        "priority": "[High/Medium/Low]",
+                        "timeline": "[X weeks/months]",
+                        "resources_required": ["[Resource 1]", "[Resource 2]"],
+                        "expected_impact": "[Description of expected outcomes]"
                     }}
                 ],
                 "success_metrics": [
                     {{
-                        "metric": "Governance maturity",
-                        "target": "Level 3 maturity",
-                        "measurement_frequency": "Quarterly"
+                        "metric": "[Specific metric name]",
+                        "target": "[Specific target or goal]",
+                        "measurement_frequency": "[Weekly/Monthly/Quarterly]"
                     }}
                 ]
             }},
+            
+            // INNOVATION PILLAR
+            // Focuses on innovation capabilities, R&D, product development, and future-readiness
             "innovation": {{
                 "pillar_code": "I",
-                "relevance_score": 7.0,
+                "relevance_score": "[1-10 based on importance to organization]",
                 "current_state": {{
-                    "strengths": ["Customer-centric approach", "Market responsiveness"],
-                    "weaknesses": ["Limited R&D investment", "Innovation processes"],
-                    "assessment_score": 6.0
+                    // Innovation strengths (strong R&D, innovative products, etc.)
+                    "strengths": ["[Innovation strength 1]", "[Innovation strength 2]"],
+                    // Innovation gaps (limited R&D, outdated products, etc.)
+                    "weaknesses": ["[Innovation weakness 1]", "[Innovation weakness 2]"],
+                    "assessment_score": "[1-10 score]"
                 }},
                 "recommendations": [
                     {{
-                        "action": "Establish innovation processes and R&D investment",
-                        "priority": "Medium",
-                        "timeline": "6 months",
-                        "resources_required": ["Innovation team", "R&D budget"],
-                        "expected_impact": "Enhanced competitive advantage"
+                        "action": "[Specific innovation recommendation]",
+                        "priority": "[High/Medium/Low]",
+                        "timeline": "[X weeks/months]",
+                        "resources_required": ["[Resource 1]", "[Resource 2]"],
+                        "expected_impact": "[Description of expected outcomes]"
                     }}
                 ],
                 "success_metrics": [
                     {{
-                        "metric": "Innovation pipeline",
-                        "target": "3 new products/services per year",
-                        "measurement_frequency": "Quarterly"
+                        "metric": "[Specific metric name]",
+                        "target": "[Specific target or goal]",
+                        "measurement_frequency": "[Weekly/Monthly/Quarterly]"
                     }}
                 ]
             }},
+            
+            // CULTURE PILLAR
+            // Focuses on organizational culture, employee engagement, values, and cultural alignment
             "culture": {{
                 "pillar_code": "C",
-                "relevance_score": 8.5,
+                "relevance_score": "[1-10 based on importance to organization]",
                 "current_state": {{
-                    "strengths": ["Collaborative culture", "Fast-paced environment"],
-                    "weaknesses": ["Limited formal culture programs"],
-                    "assessment_score": 7.5
+                    // Cultural strengths (strong values, high engagement, etc.)
+                    "strengths": ["[Culture strength 1]", "[Culture strength 2]"],
+                    // Cultural challenges (low engagement, unclear values, etc.)
+                    "weaknesses": ["[Culture weakness 1]", "[Culture weakness 2]"],
+                    "assessment_score": "[1-10 score]"
                 }},
                 "recommendations": [
                     {{
-                        "action": "Formalize culture programs and values",
-                        "priority": "Low",
-                        "timeline": "6 months",
-                        "resources_required": ["Culture programs", "Values documentation"],
-                        "expected_impact": "Enhanced employee engagement and retention"
+                        "action": "[Specific culture recommendation]",
+                        "priority": "[High/Medium/Low]",
+                        "timeline": "[X weeks/months]",
+                        "resources_required": ["[Resource 1]", "[Resource 2]"],
+                        "expected_impact": "[Description of expected outcomes]"
                     }}
                 ],
                 "success_metrics": [
                     {{
-                        "metric": "Employee satisfaction",
-                        "target": "85% satisfaction rate",
-                        "measurement_frequency": "Quarterly"
+                        "metric": "[Specific metric name]",
+                        "target": "[Specific target or goal]",
+                        "measurement_frequency": "[Weekly/Monthly/Quarterly]"
                     }}
                 ]
             }}
         }},
+        
+        // CROSS-PILLAR SYNTHESIS SECTION
+        // Identifies connections and synergies between different pillars
         "cross_pillar_synthesis": {{
+            // Key relationships and dependencies between pillars
             "interconnections": [
                 {{
-                    "pillars": ["Technology and Digitization", "Execution"],
-                    "relationship": "Technology enables better execution",
-                    "synergy_opportunity": "Automate execution processes"
+                    // Which pillars are connected
+                    "pillars": ["[Pillar 1]", "[Pillar 2]"],
+                    // Nature of the relationship
+                    "relationship": "[Description of how pillars relate]",
+                    // Opportunity for synergistic improvements
+                    "synergy_opportunity": "[How to leverage this connection]"
                 }}
             ],
+            // High-level recommendations that span multiple pillars
             "holistic_recommendations": [
-                "Focus on technology-enabled execution improvements",
-                "Prioritize market expansion with operational excellence"
+                "[Cross-cutting recommendation 1]",
+                "[Cross-cutting recommendation 2]"
             ]
         }},
+        
+        // AGILE FRAMEWORKS RECOMMENDATIONS SECTION
+        // Suggests appropriate agile methodologies based on the organization's context
         "agile_frameworks_recommendations": {{
-            "scrum": {{
-                "applicability": "High for product development",
-                "use_cases": ["Mobile app development", "Feature development"],
-                "implementation_priority": "High"
+            // Scrum framework assessment 
+            // give one of the following three frameworks depending on the company name. 
+            "scrum": {{  // one of scrum, kanban or OKR
+                // How well Scrum fits this organization (High/Medium/Low)
+                "applicability": "[High/Medium/Low] for [context]",
+                // Specific areas where Scrum would be beneficial
+                "use_cases": ["[Use case 1]", "[Use case 2]"],
+                // Priority for implementing Scrum
+                "implementation_priority": "[High/Medium/Low]"
             }},
-            "kanban": {{
-                "applicability": "Medium for operations",
-                "use_cases": ["Process improvement", "Customer support"],
-                "implementation_priority": "Medium"
-            }},
-            "okrs": {{
-                "applicability": "High for strategic alignment",
-                "use_cases": ["Strategic goal tracking", "Team alignment"],
-                "implementation_priority": "High"
-            }}
         }},
+        
+        // RISK ASSESSMENT SECTION
+        // Identifies and plans for strategic risks and contingencies
         "risk_assessment": {{
+            // Key strategic risks that could impact success
             "strategic_risks": [
                 {{
-                    "risk": "Market entry failure in Chile",
-                    "probability": "Medium",
-                    "impact": "High",
-                    "mitigation": "Thorough market research and pilot program",
-                    "owner": "Strategy team"
+                    // Description of the risk
+                    "risk": "[Risk description]",
+                    // Likelihood of occurrence (Low/Medium/High)
+                    "probability": "[Low/Medium/High]",
+                    // Severity of impact (Low/Medium/High)
+                    "impact": "[Low/Medium/High]",
+                    // How to reduce or manage the risk
+                    "mitigation": "[Mitigation strategy]",
+                    // Who is responsible for managing this risk
+                    "owner": "[Risk owner]"
                 }}
             ],
+            // Plans for different scenarios
             "contingency_plans": [
                 {{
-                    "scenario": "Regulatory changes in target markets",
-                    "response": "Immediate compliance review and strategy adjustment",
-                    "trigger_indicators": ["New tax laws", "Digital regulations"]
+                    // What scenario triggers this plan
+                    "scenario": "[Scenario description]",
+                    // How to respond if scenario occurs
+                    "response": "[Response strategy]",
+                    // Early warning signs to watch for
+                    "trigger_indicators": ["[Indicator 1]", "[Indicator 2]"]
                 }}
             ]
         }},
+        
+        // SUCCESS BENCHMARKS SECTION
+        // Establishes benchmarks and success criteria based on industry standards and case studies
         "success_benchmarks": {{
+            // Similar organizations or case studies to learn from
             "case_study_parallels": [
                 {{
-                    "company": "Duolingo",
-                    "parallel": "Digital education platform expansion",
-                    "applicable_lesson": "Mobile-first approach and gamification",
-                    "success_metric": "User engagement and retention"
+                    // Name of comparable organization
+                    "company": "[Company name]",
+                    // What makes them comparable
+                    "parallel": "[Why this company is relevant]",
+                    // Key lesson to apply
+                    "applicable_lesson": "[What can be learned/applied]",
+                    // How success is measured in their case
+                    "success_metric": "[Relevant success metric]"
                 }}
             ],
+            // Industry standard metrics and targets
             "industry_benchmarks": [
                 {{
-                    "metric": "Customer retention rate",
-                    "industry_average": "70%",
-                    "target": "85%",
-                    "timeframe": "12 months"
+                    // What metric to benchmark
+                    "metric": "[Metric name]",
+                    // Industry average performance
+                    "industry_average": "[Average value]",
+                    // Target performance for this organization
+                    "target": "[Target value]",
+                    // When to achieve the target
+                    "timeframe": "[Timeline]"
                 }}
             ]
         }},
+        
+        // IMPLEMENTATION ROADMAP SECTION
+        // Phased approach to implementing recommendations
         "implementation_roadmap": {{
+            // First phase of implementation
             "phase_1": {{
-                "duration": "3 months",
-                "focus": "Operational efficiency and automation",
-                "key_initiatives": ["Process automation", "Mobile app development"],
-                "budget": "$100,000",
-                "success_criteria": ["30% efficiency improvement", "App beta launch"]
+                // How long this phase will take
+                "duration": "[X months]",
+                // Main focus area for this phase
+                "focus": "[Primary focus theme]",
+                // Key initiatives to execute
+                "key_initiatives": ["[Initiative 1]", "[Initiative 2]"],
+                // Budget required for this phase
+                "budget": "$[Amount]",
+                // How to measure success of this phase
+                "success_criteria": ["[Criterion 1]", "[Criterion 2]"]
             }},
+            // Second phase of implementation
             "phase_2": {{
-                "duration": "6 months",
-                "focus": "Market expansion and analytics",
-                "key_initiatives": ["Chile market entry", "Analytics implementation"],
-                "budget": "$200,000",
-                "success_criteria": ["Market entry success", "Data-driven decisions"]
+                "duration": "[X months]",
+                "focus": "[Primary focus theme]",
+                "key_initiatives": ["[Initiative 1]", "[Initiative 2]"],
+                "budget": "$[Amount]",
+                "success_criteria": ["[Criterion 1]", "[Criterion 2]"]
             }},
+            // Third phase of implementation
             "phase_3": {{
-                "duration": "12 months",
-                "focus": "Scale and innovation",
-                "key_initiatives": ["Product innovation", "Geographic expansion"],
-                "budget": "$300,000",
-                "success_criteria": ["3 new products", "2 new markets"]
+                "duration": "[X months]",
+                "focus": "[Primary focus theme]",
+                "key_initiatives": ["[Initiative 1]", "[Initiative 2]"],
+                "budget": "$[Amount]",
+                "success_criteria": ["[Criterion 1]", "[Criterion 2]"]
             }}
         }},
+        
+        // MONITORING AND FEEDBACK SECTION
+        // Establishes systems for tracking progress and gathering feedback
         "monitoring_and_feedback": {{
-            "dashboard_requirements": ["KPI tracking", "Progress monitoring", "Risk alerts"],
+            // What should be included in executive dashboards
+            "dashboard_requirements": ["[Dashboard element 1]", "[Dashboard element 2]", "[Dashboard element 3]"],
+            // Regular review and planning cycles
             "review_cycles": {{
-                "weekly": "Team progress updates",
-                "monthly": "KPI review and adjustments",
-                "quarterly": "Strategic review and planning",
-                "annual": "Comprehensive strategy assessment"
+                // Weekly team check-ins
+                "weekly": "[What to review weekly]",
+                // Monthly performance reviews
+                "monthly": "[What to review monthly]",
+                // Quarterly strategic reviews
+                "quarterly": "[What to review quarterly]",
+                // Annual comprehensive assessments
+                "annual": "[What to review annually]"
             }},
+            // Feedback loops to ensure continuous improvement
             "feedback_loops": [
                 {{
-                    "source": "Customer feedback",
-                    "frequency": "Weekly",
-                    "integration_point": "Product development"
+                    // Where feedback comes from
+                    "source": "[Feedback source]",
+                    // How often to collect feedback
+                    "frequency": "[Collection frequency]",
+                    // How feedback influences decisions/actions
+                    "integration_point": "[Where feedback is used]"
                 }}
             ]
         }}
@@ -1816,6 +1980,7 @@ Guidelines:
 - Provide actionable recommendations with clear priorities and timelines
 - Include cross-pillar synthesis and holistic recommendations
 - Format of the output should not change, it should be a valid JSON object and of the same format as the example provided.
+- IT SHOULD BE A VALID JSON.
 '''
 
 # Add PORTER analysis prompts after strategic analysis prompts
@@ -1844,177 +2009,157 @@ Create Porter's Five Forces analysis and return it in the following JSON format:
 {{
     "porter_analysis": {{
         "executive_summary": {{
-            "industry_attractiveness": "Moderate",
-            "overall_competitive_intensity": "High",
-            "key_competitive_forces": ["Threat of New Entrants", "Competitive Rivalry"],
-            "strategic_implications": ["Focus on differentiation", "Build entry barriers"],
-            "competitive_position": "Challenger"
+            "industry_attractiveness": "", // e.g., "High", "Moderate", "Low"
+            "overall_competitive_intensity": "", // e.g., "High", "Medium", "Low"
+            "key_competitive_forces": [], // List the most important forces driving competition
+            "strategic_implications": [], // List the broad strategic moves needed
+            "competitive_position": "" // e.g., "Leader", "Challenger", "Follower", "Niche Player"
         }},
         "five_forces_analysis": {{
             "threat_of_new_entrants": {{
-                "intensity": "Medium",
-                "score": 6,
+                "intensity": "", // High/Medium/Low
+                "score": 0, // 1-10 scale
                 "key_factors": [
                     {{
-                        "factor": "Low capital requirements",
-                        "impact": "High",
-                        "description": "Digital products require minimal upfront investment"
-                    }},
-                    {{
-                        "factor": "Brand loyalty",
-                        "impact": "Medium",
-                        "description": "Established customer relationships provide some protection"
+                        "factor": "", // Short label of the factor
+                        "impact": "", // High/Medium/Low
+                        "description": "" // How it influences entry threat
                     }}
                 ],
-                "entry_barriers": [
-                    "Brand recognition",
-                    "Customer relationships",
-                    "Technology expertise"
-                ],
-                "strategic_implications": "Focus on building strong brand and customer loyalty"
+                "entry_barriers": [], // List key barriers to entry
+                "strategic_implications": "" // Strategy to address this force
             }},
             "bargaining_power_of_suppliers": {{
-                "intensity": "Low",
-                "score": 3,
+                "intensity": "",
+                "score": 0,// 1-10 scale
                 "key_factors": [
                     {{
-                        "factor": "Multiple supplier options",
-                        "impact": "Low",
-                        "description": "Technology and service providers are abundant"
+                        "factor": "",
+                        "impact": "",
+                        "description": ""
                     }}
                 ],
-                "supplier_concentration": "Low",
-                "switching_costs": "Low",
-                "strategic_implications": "Maintain multiple supplier relationships for flexibility"
+                "supplier_concentration": "", // High/Medium/Low
+                "switching_costs": "", // High/Medium/Low
+                "strategic_implications": ""
             }},
             "bargaining_power_of_buyers": {{
-                "intensity": "High",
-                "score": 8,
+                "intensity": "",
+                "score": 0,
                 "key_factors": [
                     {{
-                        "factor": "Low switching costs",
-                        "impact": "High",
-                        "description": "Customers can easily switch to competitors"
-                    }},
-                    {{
-                        "factor": "Price sensitivity",
-                        "impact": "High",
-                        "description": "Customers are price-conscious in this market"
+                        "factor": "",
+                        "impact": "",
+                        "description": ""
                     }}
                 ],
-                "buyer_concentration": "Low",
-                "product_differentiation": "Medium",
-                "strategic_implications": "Focus on value proposition and customer retention"
+                "buyer_concentration": "", // High/Medium/Low
+                "product_differentiation": "", // High/Medium/Low
+                "strategic_implications": ""
             }},
             "threat_of_substitute_products": {{
-                "intensity": "Medium",
-                "score": 5,
+                "intensity": "",
+                "score": 0,
                 "key_factors": [
                     {{
-                        "factor": "Alternative learning methods",
-                        "impact": "Medium",
-                        "description": "Traditional education and self-learning options exist"
+                        "factor": "",
+                        "impact": "",
+                        "description": ""
                     }}
                 ],
-                "substitute_availability": "High",
-                "switching_costs": "Low",
-                "strategic_implications": "Emphasize unique value proposition and outcomes"
+                "substitute_availability": "", // High/Medium/Low
+                "switching_costs": "", // High/Medium/Low
+                "strategic_implications": ""
             }},
             "competitive_rivalry": {{
-                "intensity": "High",
-                "score": 8,
+                "intensity": "",
+                "score": 0,
                 "key_factors": [
                     {{
-                        "factor": "Many competitors",
-                        "impact": "High",
-                        "description": "Numerous players in the education technology space"
-                    }},
-                    {{
-                        "factor": "Low differentiation",
-                        "impact": "High",
-                        "description": "Similar offerings across competitors"
+                        "factor": "",
+                        "impact": "",
+                        "description": ""
                     }}
                 ],
-                "competitor_concentration": "Medium",
-                "industry_growth": "High",
-                "strategic_implications": "Focus on differentiation and niche positioning"
+                "competitor_concentration": "", // High/Medium/Low
+                "industry_growth": "", // High/Medium/Low
+                "strategic_implications": ""
             }}
         }},
         "competitive_landscape": {{
             "direct_competitors": [
                 {{
-                    "name": "Competitor A",
-                    "market_share": "25%",
-                    "strengths": ["Brand recognition", "Large customer base"],
-                    "weaknesses": ["High costs", "Slow innovation"]
+                    "name": "", // Competitor name
+                    "market_share": "", // % or qualitative
+                    "strengths": [], // Key strengths
+                    "weaknesses": [] // Key weaknesses
                 }}
             ],
             "indirect_competitors": [
                 {{
-                    "name": "Traditional Education",
-                    "threat_level": "Medium",
-                    "competitive_advantage": "Established credibility"
+                    "name": "", // Indirect competitor category
+                    "threat_level": "", // High/Medium/Low
+                    "competitive_advantage": "" // Their main edge
                 }}
             ],
             "potential_entrants": [
                 {{
-                    "category": "Tech companies",
-                    "likelihood": "High",
-                    "barriers": "Brand building, customer acquisition"
+                    "category": "", // e.g., "Tech companies", "Startups"
+                    "likelihood": "", // High/Medium/Low
+                    "barriers": "" // Key barriers they will face
                 }}
             ]
         }},
         "strategic_recommendations": {{
             "immediate_actions": [
                 {{
-                    "action": "Strengthen brand differentiation",
-                    "rationale": "Address high competitive rivalry",
-                    "timeline": "3-6 months",
-                    "resources_required": ["Marketing budget", "Brand strategy"],
-                    "expected_impact": "Reduced price sensitivity"
+                    "action": "", // Short action statement
+                    "rationale": "", // Why it's needed
+                    "timeline": "", // e.g., "3-6 months"
+                    "resources_required": [], // e.g., budgets, teams
+                    "expected_impact": "" // The benefit
                 }}
             ],
             "short_term_initiatives": [
                 {{
-                    "initiative": "Build customer loyalty programs",
-                    "strategic_pillar": "Customer Retention",
-                    "expected_outcome": "Reduced buyer bargaining power",
-                    "risk_mitigation": "Addresses switching costs"
+                    "initiative": "", // Short-term move
+                    "strategic_pillar": "", // e.g., "Customer Retention"
+                    "expected_outcome": "",
+                    "risk_mitigation": "" // How to reduce associated risks
                 }}
             ],
             "long_term_strategic_shifts": [
                 {{
-                    "shift": "Develop proprietary technology",
-                    "transformation_required": "R&D investment",
-                    "competitive_advantage": "Entry barrier creation",
-                    "sustainability": "Long-term competitive moat"
+                    "shift": "", // Big strategic change
+                    "transformation_required": "", // What needs to be built/changed
+                    "competitive_advantage": "", // Edge it provides
+                    "sustainability": "" // How long-term it is
                 }}
             ]
         }},
         "monitoring_dashboard": {{
             "key_indicators": [
                 {{
-                    "indicator": "New competitor entry rate",
-                    "force": "Threat of New Entrants",
-                    "measurement_frequency": "Quarterly",
+                    "indicator": "", // KPI name
+                    "force": "", // Which of the five forces it relates to
+                    "measurement_frequency": "", // e.g., "Quarterly"
                     "threshold_values": {{
-                        "green": "<2 new entrants/year",
-                        "yellow": "2-5 new entrants/year",
-                        "red": ">5 new entrants/year"
+                        "green": "", // Acceptable range
+                        "yellow": "", // Warning range
+                        "red": "" // Danger range
                     }}
                 }}
             ],
             "early_warning_signals": [
                 {{
-                    "signal": "Major tech company entering market",
-                    "trigger_response": "Immediate competitive analysis",
-                    "monitoring_source": "Industry news and announcements"
+                    "signal": "", // What to watch for
+                    "trigger_response": "", // Action to take if detected
+                    "monitoring_source": "" // Where the info will come from
                 }}
             ]
         }}
     }}
 }}
-
 Guidelines:
 - Analyze all five forces comprehensively based on the questions and answers
 - Use 1-10 scoring scale for each force (1=Very Low, 10=Very High)
@@ -2023,6 +2168,7 @@ Guidelines:
 - Provide actionable strategic recommendations
 - Include monitoring framework for ongoing analysis
 - Format of the output should not change, it should be a valid JSON object and of the same format as the example provided.
+- DO NOT GENERALIZE ANYTHING, PROVIDE PROPER ANSWER IN JSON.
 '''
 
 class AnalyzeRequest(BaseModel):
@@ -2139,7 +2285,7 @@ async def analyze_qa(request: AnalyzeRequest):
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": prompt_}
-            ],
+            ] + INCOMPLETE_QA_PAYLOAD,
             temperature=0.3,
             max_tokens=200
         )
@@ -2172,7 +2318,7 @@ async def analyze_all_qa(request: AnalyzeAllRequest):
             messages=[
                 {"role": "system", "content": system_prompt_for_all_questions_answers},
                 {"role": "user", "content": prompt}
-            ],
+            ] + INCOMPLETE_QA_PAYLOAD,
             temperature=0,
             max_tokens=500
         )
@@ -2381,7 +2527,7 @@ async def capability_heatmap(request: CapabilityHeatmapRequest):
             messages=[
                 {"role": "system", "content": system_prompt_for_capability_heatmap},
                 {"role": "user", "content": prompt_}
-            ],
+            ] + INCOMPLETE_QA_PAYLOAD,
             temperature=0.3,
             max_tokens=800
         )
@@ -2457,7 +2603,7 @@ async def full_swot_portfolio(request: FullSwotPortfolioRequest):
             messages=[
                 {"role": "system", "content": system_prompt_for_full_swot_portfolio},
                 {"role": "user", "content": prompt_}
-            ],
+            ] + INCOMPLETE_QA_PAYLOAD,
             temperature=0.3,
             max_tokens=1000
         )
@@ -2560,7 +2706,7 @@ async def channel_effectiveness(request: ChannelEffectivenessRequest):
             messages=[
                 {"role": "system", "content": system_prompt_for_channel_effectiveness},
                 {"role": "user", "content": prompt_}
-            ],
+            ]+ INCOMPLETE_QA_PAYLOAD,
             temperature=0.3,
             max_tokens=900
         )
@@ -2662,7 +2808,7 @@ async def expanded_capability_heatmap(request: ExpandedCapabilityHeatmapRequest)
             messages=[
                 {"role": "system", "content": system_prompt_for_expanded_capability_heatmap},
                 {"role": "user", "content": prompt_}
-            ],
+            ]+ INCOMPLETE_QA_PAYLOAD,
             temperature=0.3,
             max_tokens=1000
         )
@@ -2764,7 +2910,7 @@ async def strategic_radar(request: StrategicRadarRequest):
             messages=[
                 {"role": "system", "content": system_prompt_for_strategic_radar},
                 {"role": "user", "content": prompt_}
-            ],
+            ]+ INCOMPLETE_QA_PAYLOAD,
             temperature=0.3,
             max_tokens=800
         )
@@ -2865,7 +3011,7 @@ async def maturity_scoring(request: MaturityScoringRequest):
             messages=[
                 {"role": "system", "content": system_prompt_for_maturity_scoring},
                 {"role": "user", "content": prompt_}
-            ],
+            ]+ INCOMPLETE_QA_PAYLOAD,
             temperature=0.3,
             max_tokens=900
         )
@@ -3691,23 +3837,41 @@ async def strategic_analysis(request_: StrategicAnalysisRequest, request: Reques
             ]
         
         if request.headers.get('deep_search'):
-            web_data: str = perform_web_search(request_.questions, request_.answers)
-            payload += [{"role": "user", "content": f"Here is the company name for web searching \n {web_data}"}]
+            company_name: str = perform_web_search(request_.questions, request_.answers)
+            company_data: str = fetch_top_articles(keyword = company_name, num_articles=2)
+            print(company_data)
+            payload += [{"role": "user", "content": f"Here is the company name for web searching \n {company_name} and its associated data is as follows : \n {company_data}"},
+                        {"role": "user", "content": "PROVIDE A VALID JSON WITHOUT ANY BACKTICKS OR SPECIAL CHARACTERS, JUST VALID JSON"}]
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=payload,
+                temperature=0,
+                max_tokens=3000
+            )
+            assistant_text = response.choices[0].message.content.strip()
         
             # print(payload)
-            response = client.responses.create(
-                model="gpt-4.1",
-                input=payload,
-                max_output_tokens=5000,
-                tools=[{"type": "web_search_preview", "search_context_size": "low"}],
+            # response = client.responses.create(
+            #     model="gpt-4.1",
+            #     input=payload,
+            #     max_output_tokens=5000,
+            #     tools=[{"type": "web_search_preview", "search_context_size": "low"}],
                 
-            )
-            assistant_text = ""
-            for message in response.output:
-                if message.type == "message":
-                    for content in message.content:
-                        if content.type == "output_text":
-                            assistant_text += content.text
+            # )
+            # assistant_text = ""
+            # web_search_results = []
+            # for message in response.output:
+            #     if message.type == "tool" and message.tool == "web_search_preview":
+            #         # This is where web search results appear
+            #         web_search_results.append(message)
+
+            # print("==== WEB SEARCH RESULTS ====")
+            # print(web_search_results)
+            # for message in response.output:
+            #     if message.type == "message":
+            #         for content in message.content:
+            #             if content.type == "output_text":
+            #                 assistant_text += content.text
         else:
             
             response = client.chat.completions.create(

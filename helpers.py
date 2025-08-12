@@ -33,6 +33,46 @@ def perform_web_search(questions, answers):
             
         )
     return response.choices[0].message.content
+
+from googlesearch import search
+import requests
+import trafilatura
+
+
+def fetch_top_articles(keyword, num_articles=3):
+    """
+    Search Google for a keyword and fetch clean main content of the top articles.
+    
+    Args:
+        keyword (str): Search query
+        num_articles (int): Number of top results to fetch
+        
+    Returns:
+        dict: {url: clean_text}
+    """
+    result = ""
+
+    # Perform Google search
+    search_results = list(search(keyword, num_results=num_articles))
+
+    for url in search_results[:num_articles]:
+        try:
+            print(f"Fetching: {url}")
+            # response = requests.get(url, timeout=10, headers={
+            #     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+            # })
+
+            # Extract clean main text using trafilatura
+            downloaded = trafilatura.fetch_url(url)
+            if downloaded:
+                text = trafilatura.extract(downloaded)
+                if text:
+                    result += text
+
+        except Exception as e:
+            print(f"Error fetching {url}: {e}")
+
+    return result
 class DocumentProcessor:
     def __init__(self, openai_api_key: str):
         self.client = OpenAI(api_key=openai_api_key)
