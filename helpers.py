@@ -979,29 +979,33 @@ def merge_json_values(existing_json, new_json):
                         if i < len(existing[key]):
                             if isinstance(existing[key][i], dict) and isinstance(item, dict):
                                 merge_recursive(existing[key][i], item)
-                            elif item is not None and item != "":
+                            elif item is not None and item not in ["", "NOT ENOUGH DATA"]:
                                 existing[key][i] = item
                         else:
                             # Add new items to the list
-                            if item is not None and item != "":
+                            if item is not None and item not in ["", "NOT ENOUGH DATA"]:
                                 existing[key].append(item)
-                elif value is not None and value != "" and value != []:
+                elif value is not None and value not in ["", "NOT ENOUGH DATA"] and value != []:
                     # Only update if new value is not None, empty string, or empty list
                     existing[key] = value
             else:
                 # Add new key if it doesn't exist
-                if value is not None and value != "" and value != []:
+                if value is not None and value not in ["", "NOT ENOUGH DATA"] and value != []:
                     existing[key] = value
     
     merge_recursive(merged, new_json)
     return merged
   
 def process_file_and_questions(file: UploadFile, questions : Optional[List[str]], answers: Optional[List[str]], reference: dict):
-    pdf_content = file.file.read()
-    pdf_document = fitz.open(stream=pdf_content, filetype="pdf")
+    total_pages = 0
+    if file:
+        pdf_content = file.file.read()
+        pdf_document = fitz.open(stream=pdf_content, filetype="pdf")
+        
+        total_pages = len(pdf_document)
     
-    total_pages = len(pdf_document)
     result = {}
+
     for page_num in range(total_pages):
         page = pdf_document[page_num]        
         # Convert page to image for visual analysis
@@ -1009,13 +1013,7 @@ def process_file_and_questions(file: UploadFile, questions : Optional[List[str]]
         page_image = DocumentProcessor(openai_api_key=os.environ.get('OPENAI_API_KEY'))._page_to_image(page)
         page_image_base64 = DocumentProcessor(openai_api_key=os.environ.get('OPENAI_API_KEY'))._image_to_base64(page_image)
         qa_payload = {}
-        if questions and answers:
-            qa_payload = {
-                            "type":"text",
-                            "text": f'''CONTENT IN THE ALONG WITH QUESTIONS AND ANSWERS ARE AS FOLLOWS TO HELP YOU FURTHER : 
-                            {questions}
-                            {answers}'''
-                        }
+        
         
         messages = [
                 {
@@ -1054,7 +1052,7 @@ def process_file_and_questions(file: UploadFile, questions : Optional[List[str]]
             ]
         response = client.chat.completions.create(
             model="gpt-4o",
-            messages=messages + qa_payload if qa_payload else messages,
+            messages=messages,
             max_tokens=1000,
             temperature=0
         )
@@ -1074,4 +1072,59 @@ def process_file_and_questions(file: UploadFile, questions : Optional[List[str]]
         except Exception as e:
             print(f"Error processing page {page_num + 1}: {e}")
             continue
+    print(result)
+    if questions and answers:
+        qa_payload = {
+                        "type":"text",
+                        "text": f'''CONTENT IN THE ALONG WITH QUESTIONS AND ANSWERS ARE AS FOLLOWS TO HELP YOU FURTHER : 
+                        {questions}
+                        {answers}'''
+                    }
+        messages = [
+                    {
+                        "role": "system",
+                        "content": [
+                            {"type": "text", "text": f''' 
+                                    YOU ARE A FINANCE DOCUMENT ANALYZER WHERE YOU ARE GIVEN AN IMAGE, AND THEN FROM WHICH, YOUR TASK IS TO IDENTIFY
+                                    IF THERE ARE ANY FINANCIAL DOCUMENTS PRESENT. IF YOU DO NOT FIND ANY VALUES IN THE FINANCIAL DOCUMENT, RETURN NONE.
+                                    DO NOT TRY TO FILL IN GARBAGE OR HALLUCINATED VALUES EVER. IT IS OKAY TO HAVE NONE VALUES THAN WRONG ONES FOR ME.
+                                    
+                                    THE JSON STRUCTURE IS AS FOLLOWS : 
+                                    {json.dumps(reference)}
+                                    
+                                    OUTPUT THE SAME JSON, WITH ASSOCIATED VALUES, NEVER GIVE ANYTHING OTHER THAN JSON, AS I AM GOING TO PARSE THIS 
+                                    JSON FOR MY FRONTEND. DO NOT USE ``` OR ANYTHING ELSE, JUST THE SIMPLE JSON THAT IS NEEDED. IF THERE ARE SOME VALUES
+                                    PRESENT IN THE JSON, KEEP IT UNCHANGED, DO NOT CHANGE ANY EXISTING VALUES.
+                                    ALWAYS PROVIDE VALID JSON, AND NOTHING ELSE THAN THAT. THIS IS VERY VERY VERY CRUCIAL
+                                '''}
+                        ]
+                    },
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": '''Provide me the values you see and fill the JSON, return only the JSON and nothing else. THE JSON RESPONSE SHOULD NOT CHANGE IN ANY CASE.
+                                                    YOU SHOULD ALWAYS PROVIDE THE SAME JSON RESPONSE AS MENTIONED IN THE SYSTEM PROMPT. THE DOCUMENT CAN BE IN ANY LANGUAGE, 
+                                                    UNDERSTAND IT AND THEN FILL THE JSON AS PER THE REQUIREMENT.
+                                                    GIVE ME THE JSON AS SHOWN IN THE SYSTEM PROMPT AS ALWAYS WITH VALUES UPDATED AS PER YOUR KNOWLEDGE.'''},
+                            
+                        ]
+                    }
+                ]
+        print('i came here')
+        print(reference)
+        INCOMPLETE_QA_PAYLOAD = [{"role": "user", "content": "ADD `NOT ENOUGH DATA` TO THE VALUES IF YOU FEEL THE DATA IS NOT ENOUGH"}]
+
+        messages[1]['content'].append(qa_payload)
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=messages + INCOMPLETE_QA_PAYLOAD,
+            max_tokens=1000,
+            temperature=0
+        )
+        result_text = response.choices[0].message.content.strip()
+        page_result = json.loads(result_text)
+        # Merge the new page results with the existing result
+        result = merge_json_values(result, page_result)
+    
+    
     return result 
