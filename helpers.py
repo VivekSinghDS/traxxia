@@ -1028,7 +1028,7 @@ def process_file_and_questions(file: UploadFile, questions : Optional[List[str]]
                                 {json.dumps(reference)}
                                 
                                 OUTPUT THE SAME JSON, WITH ASSOCIATED VALUES, NEVER GIVE ANYTHING OTHER THAN JSON, AS I AM GOING TO PARSE THIS 
-                                JSON FOR MY FRONTEND. DO NOT USE ``` OR ANYTHING ELSE, JUST THE SIMPLE JSON THAT IS NEEDED. IF THERE ARE SOME VALUES
+                                JSON FOR MY FRONTEND. DO NOT USE ```json OR ANYTHING ELSE, JUST THE SIMPLE JSON THAT IS NEEDED. IF THERE ARE SOME VALUES
                                 PRESENT IN THE JSON, KEEP IT UNCHANGED, DO NOT CHANGE ANY EXISTING VALUES.
                                 ALWAYS PROVIDE VALID JSON, AND NOTHING ELSE THAN THAT. THIS IS VERY VERY VERY CRUCIAL
                             '''}
@@ -1054,7 +1054,7 @@ def process_file_and_questions(file: UploadFile, questions : Optional[List[str]]
             model="gpt-4o",
             messages=messages,
             max_tokens=1000,
-            temperature=0
+            temperature=0.3
         )
         
         try:
@@ -1064,7 +1064,7 @@ def process_file_and_questions(file: UploadFile, questions : Optional[List[str]]
             result = merge_json_values(result, page_result)
             
             print(f"Processed page {page_num + 1}/{total_pages}")
-            
+            print(result)
         except json.JSONDecodeError as e:
             print(f"Error parsing JSON from page {page_num + 1}: {e}")
             print(f"Raw response: {result_text}")

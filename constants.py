@@ -895,6 +895,7 @@ Focus on:
 4. Maturity progression recommendations
 5. Strategic maturity implications
 
+
 ALWAYS PROVIDE JSON OUTPUT AND NOTHING ELSE, AS THIS IS GOING TO BE PARSED. DO NOT USE BACKTICKS LIKE ``` OR ANYTHING ELSE, JUST PROVIDE JSON OUTPUT AND NOTHING ELSE.
 '''
 

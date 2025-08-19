@@ -770,7 +770,7 @@ async def maturity_scoring(request: MaturityScoringRequest):
                 {"role": "user", "content": prompt_}
             ]+ INCOMPLETE_QA_PAYLOAD,
             temperature=0.3,
-            max_tokens=900
+            max_tokens=1000
         )
         result_text = response.choices[0].message.content.strip()
         
@@ -1482,7 +1482,7 @@ async def pestel_analysis(request_: PestelAnalysisRequest, request: Request):
         response = client.responses.create(
             model="gpt-4.1",
             input=payload,
-            tools=[{"type": "web_search_preview", "search_context_size": "low"}],
+            tools=[{"type": "web_search_preview", "search_context_size": "high"}],
         )
         assistant_text = ""
         for message in response.output:
@@ -1490,6 +1490,8 @@ async def pestel_analysis(request_: PestelAnalysisRequest, request: Request):
                 for content in message.content:
                     if content.type == "output_text":
                         assistant_text += content.text
+        
+        
     else:
         response = client.chat.completions.create(
             model="gpt-4o",
@@ -1827,15 +1829,6 @@ async def porter_analysis_with_file(
 @app.get("/")
 async def root():
     return {"message": "OpenAI Question-Answer Analyzer API", "endpoint": "/analyze"}
-
-@app.post('/cost-efficiency-competitive-position')
-async def cost_efficiency_comp_position(request: Request,
-    file: Optional[UploadFile] = File(None),
-    questions: Optional[List[str]] = None,
-    answers: Optional[List[str]] = None):
-    
-    result = (process_file_and_questions(file, questions, answers, reference = PHASE_3['COST_EFFICIENCY_COMPETITIVE_POSITIONING']))
-    return result
 
 @app.post('/cost-efficiency-competitive-position')
 async def cost_efficiency_comp_position(request: Request,
