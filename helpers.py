@@ -1064,7 +1064,6 @@ def process_file_and_questions(file: UploadFile, questions : Optional[List[str]]
             result = merge_json_values(result, page_result)
             
             print(f"Processed page {page_num + 1}/{total_pages}")
-            print(result)
         except json.JSONDecodeError as e:
             print(f"Error parsing JSON from page {page_num + 1}: {e}")
             print(f"Raw response: {result_text}")

@@ -1,0 +1,194 @@
+import pandas as pd
+import numpy as np
+
+class MediumAnalysis:
+    """
+    Adapter class to analyze financial data from a DataFrame and return results as dictionaries
+    """
+    
+    def __init__(self, df):
+        """
+        Initialize the adapter with a financial DataFrame
+        
+        Args:
+            df (pd.DataFrame): DataFrame containing financial data with 'Category' column
+        """
+        self.df = df
+    
+    def get_value(self, row_name, col="Year Total"):
+        """Extract a specific value from the DataFrame"""
+        row = self.df[self.df["Category"].str.strip().str.lower() == row_name.lower()]
+        if not row.empty and col in self.df.columns:
+            val = row[col].values[0]
+            return float(val) if pd.notnull(val) else np.nan
+        return np.nan
+    
+    @staticmethod
+    def safe_divide(numerator, denominator):
+        """Safely divide two numbers, handling zeros and NaN values"""
+        if denominator in (0, np.nan, None) or pd.isna(denominator):
+            return None
+        if pd.isna(numerator):
+            return None
+        return float(numerator / denominator)
+    
+    @staticmethod
+    def clean_value(value):
+        """Convert NaN values to None for JSON compatibility"""
+        if pd.isna(value):
+            return None
+        return float(value) if isinstance(value, (int, float, np.number)) else value
+    
+    def clean_dict(self, data_dict):
+        """Recursively clean dictionary of NaN values"""
+        cleaned = {}
+        for key, value in data_dict.items():
+            if isinstance(value, dict):
+                cleaned[key] = self.clean_dict(value)
+            elif isinstance(value, (list, tuple)):
+                cleaned[key] = [self.clean_value(v) for v in value]
+            else:
+                cleaned[key] = self.clean_value(value)
+        return cleaned
+    
+    def get_profitability_metrics(self):
+        """Calculate and return profitability metrics as dictionary"""
+        revenue = self.get_value("Revenue")
+        cogs = self.get_value("Cost of Goods Sold")
+        gross_profit = self.get_value("Gross Profit")
+        operating_income = self.get_value("Operating Income")
+        ebitda = self.get_value("EBITDA")
+        net_income = self.get_value("Net Income")
+        
+        metrics = {
+            "gross_margin": self.safe_divide(gross_profit, revenue),
+            "operating_margin": self.safe_divide(operating_income, revenue),
+            "ebitda_margin": self.safe_divide(ebitda, revenue),
+            "net_margin": self.safe_divide(net_income, revenue)
+        }
+        
+        return self.clean_dict(metrics)
+    
+    def get_liquidity_metrics(self):
+        """Calculate and return liquidity metrics as dictionary"""
+        current_assets = self.get_value("Current Assets")
+        current_liabilities = self.get_value("Current Liabilities")
+        inventory = self.get_value("Inventory")
+        
+        metrics = {
+            "current_ratio": self.safe_divide(current_assets, current_liabilities),
+            "quick_ratio": self.safe_divide(current_assets - inventory, current_liabilities)
+        }
+        
+        return self.clean_dict(metrics)
+    
+    def get_investment_metrics(self):
+        """Calculate and return investment performance metrics as dictionary"""
+        net_income = self.get_value("Net Income")
+        operating_income = self.get_value("Operating Income")
+        total_assets = self.get_value("Total Assets")
+        shareholder_equity = self.get_value("Shareholder Equity")
+        debt = self.get_value("Total Debt")
+        
+        metrics = {
+            "roa": self.safe_divide(net_income, total_assets),
+            "roe": self.safe_divide(net_income, shareholder_equity),
+            "roic": self.safe_divide(operating_income, (debt + shareholder_equity))
+        }
+        
+        return self.clean_dict(metrics)
+    
+    def get_leverage_metrics(self):
+        """Calculate and return leverage and risk metrics as dictionary"""
+        debt = self.get_value("Total Debt")
+        shareholder_equity = self.get_value("Shareholder Equity")
+        operating_income = self.get_value("Operating Income")
+        interest_expense = self.get_value("Interest Expense")
+        
+        metrics = {
+            "debt_to_equity": self.safe_divide(debt, shareholder_equity),
+            "interest_coverage": self.safe_divide(operating_income, interest_expense)
+        }
+        
+        return self.clean_dict(metrics)
+    
+    def get_growth_trends(self):
+        """Calculate and return growth trends as dictionary"""
+        monthly_cols = [c for c in self.df.columns if c not in ["Category", "Year Total"]]
+        
+        # Revenue trend
+        revenue_row = self.df[self.df["Category"].str.strip().str.lower() == "revenue"]
+        revenue_data = {}
+        if not revenue_row.empty and monthly_cols:
+            revenue_values = revenue_row[monthly_cols].values[0]
+            revenue_series = pd.Series(revenue_values, index=monthly_cols)
+            
+            # Calculate growth rates and clean NaN values
+            qoq_growth = revenue_series.pct_change().to_dict()
+            yoy_growth = revenue_series.pct_change(12).to_dict()
+            
+            revenue_data = {
+                "values": self.clean_dict(revenue_series.to_dict()),
+                "qoq_growth": self.clean_dict(qoq_growth),
+                "yoy_growth": self.clean_dict(yoy_growth)
+            }
+        
+        # Net income trend
+        net_income_row = self.df[self.df["Category"].str.strip().str.lower() == "net income"]
+        net_income_data = {}
+        if not net_income_row.empty and monthly_cols:
+            net_income_values = net_income_row[monthly_cols].values[0]
+            net_income_series = pd.Series(net_income_values, index=monthly_cols)
+            
+            # Calculate growth rates and clean NaN values
+            qoq_growth = net_income_series.pct_change().to_dict()
+            yoy_growth = net_income_series.pct_change(12).to_dict()
+            
+            net_income_data = {
+                "values": self.clean_dict(net_income_series.to_dict()),
+                "qoq_growth": self.clean_dict(qoq_growth),
+                "yoy_growth": self.clean_dict(yoy_growth)
+            }
+        
+        return {
+            "revenue": revenue_data,
+            "net_income": net_income_data
+        }
+    
+    def get_all_metrics(self):
+        """Get all financial metrics in a single dictionary"""
+        return {
+            "profitability": self.get_profitability_metrics(),
+            "liquidity": self.get_liquidity_metrics(),
+            "investment": self.get_investment_metrics(),
+            "leverage": self.get_leverage_metrics(),
+            "growth_trends": self.get_growth_trends()
+        }
+
+
+# Example usage:
+if __name__ == "__main__":
+    # Assuming you have your df loaded
+    # df = pd.read_excel(file_path, sheet_name="Sheet1")
+    
+    # Initialize the adapter
+    # analyzer = FinancialAnalysisAdapter(df)
+    
+    # Get individual metric groups
+    # profitability = analyzer.get_profitability_metrics()
+    # liquidity = analyzer.get_liquidity_metrics()
+    # investment = analyzer.get_investment_metrics()
+    # leverage = analyzer.get_leverage_metrics()
+    # growth = analyzer.get_growth_trends()
+    
+    # Or get all metrics at once
+    # all_metrics = analyzer.get_all_metrics()
+    
+    # Print results
+    # print("Profitability:", profitability)
+    # print("Liquidity:", liquidity)
+    # print("Investment:", investment)
+    # print("Leverage:", leverage)
+    # print("Growth Trends:", growth)
+    
+    pass

@@ -1,14 +1,18 @@
-from fastapi import FastAPI, HTTPException, Request, UploadFile, File
+from io import BytesIO
+from fastapi import FastAPI, HTTPException, Header, Request, UploadFile, File
 from openai import OpenAI
 import os
 from typing import Optional, List
 from fastapi.middleware.cors import CORSMiddleware
+import pandas as pd
 from swot_analysis import SWOTNewsAnalyzer
 from dotenv import load_dotenv
 from helpers import DocumentProcessor, fetch_top_articles, perform_web_search, process_file_and_questions
 from constants import * 
 from schemas import *
 from dotenv import load_dotenv
+from excel_analyze.medium import MediumAnalysis
+from excel_analyze.simple import SimpleFinancialAnalysisAdapter
 load_dotenv()
 
 
@@ -1865,6 +1869,32 @@ async def cost_efficiency_comp_position(request: Request,
     
     result = (process_file_and_questions(file, questions, answers, reference = PHASE_3['FINANCIAL_PERFORMANCE']))
     return result
+
+@app.post('/excel-analysis')
+async def excel_analysis(request: Request,
+    file: Optional[UploadFile] = File(None),
+    source: str = Header(default='simple')
+    ):
+    
+    if file is None:
+        return {"error": "No file uploaded"}
+    
+    contents = await file.read()
+    
+    # Load Excel file into a pandas DataFrame
+    try:
+        df = pd.read_excel(BytesIO(contents))
+    except Exception as e:
+        return {"error": f"Error loading Excel file: {str(e)}"}
+    
+    if source == 'medium':
+        simple_analysis = MediumAnalysis(df)
+        return simple_analysis.get_all_metrics()
+    elif source == 'simple':
+        simple_analysis = SimpleFinancialAnalysisAdapter(df)
+        return simple_analysis.get_all_metrics()
+    
+    return ''
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000) 
