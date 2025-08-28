@@ -11,3 +11,4 @@ googlesearch-python
 requests 
 trafilatura
 openpyxl
+opencv-python
