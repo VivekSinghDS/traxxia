@@ -1609,7 +1609,7 @@ async def strategic_analysis(request_: StrategicAnalysisRequest, request: Reques
                 model="gpt-4o",
                 messages=payload,
                 temperature=0,
-                max_tokens=3000
+                max_tokens=3700
             )
             assistant_text = response.choices[0].message.content.strip()
         
@@ -1641,7 +1641,7 @@ async def strategic_analysis(request_: StrategicAnalysisRequest, request: Reques
                 model="gpt-4o",
                 messages=payload,
                 temperature=0.3,
-                max_tokens=3000
+                max_tokens=3700
             )
             assistant_text = response.choices[0].message.content.strip()
         

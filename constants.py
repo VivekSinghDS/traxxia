@@ -1942,7 +1942,40 @@ Create strategic analysis and return it in the following JSON format:
                 "[Cross-cutting recommendation 2]"
             ]
         }},
-        
+        #THIS IS FOR SETTING STRATEGIC GOALS FOR THE YEAR IN A COMPANY
+        "strategic_goals": {{
+            "year": "[Current/Target Year]",
+            "objectives": [
+                {{
+                    "objective": "[Specific strategic objective description]",
+                    "priority": "[1-5 priority ranking]",
+                    "keyResults": [
+                        {{
+                            "metric": "[Specific measurable metric]",
+                            "target": "[Target value or completion date]",
+                            "current": "[Current baseline value or status]",
+                            "progress": "[Progress percentage 0-100%]"
+                        }}
+                    ],
+                    "alignment": "[growth/innovation/retention/efficiency/other]",
+                    "owner": "[Department/Role responsible]",
+                    "timeline": "[Start date - End date]"
+                }}
+            ],
+            "overall_progress": "[Overall strategic progress percentage]",
+            "strategic_themes": [
+                "[Strategic theme 1]",
+                "[Strategic theme 2]", 
+                "[Strategic theme 3]"
+            ],
+            "quarterly_milestones": [
+                {{
+                    "quarter": "[Q1/Q2/Q3/Q4]",
+                    "milestone": "[Key milestone description]",
+                    "success_criteria": "[How to measure milestone success]"
+                }}
+            ]
+        }},
         # AGILE FRAMEWORKS RECOMMENDATIONS SECTION
         # Suggests appropriate agile methodologies based on the organization's context
         "agile_frameworks_recommendations": {{
@@ -2053,7 +2086,6 @@ Create strategic analysis and return it in the following JSON format:
                 "success_criteria": ["[Criterion 1]", "[Criterion 2]"]
             }}
         }},
-        
         # MONITORING AND FEEDBACK SECTION
         # Establishes systems for tracking progress and gathering feedback
         "monitoring_and_feedback": {{
@@ -2101,6 +2133,7 @@ Guidelines:
 - Identify VUCA factors from market uncertainty and complexity
 - Provide actionable recommendations with clear priorities and timelines
 - Include cross-pillar synthesis and holistic recommendations
+- INCLUDE STRATEGIC GOALS TOO
 - Format of the output should not change, it should be a valid JSON object and of the same format as the example provided.
 - IT SHOULD BE A VALID JSON.
 '''
