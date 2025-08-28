@@ -1,4 +1,4 @@
-PyMuPDF
+PyMuPDF==1.26.3
 pandas
 Pillow
 pytesseract

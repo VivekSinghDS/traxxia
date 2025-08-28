@@ -9,7 +9,7 @@ COPY requirements.txt ./requirements.txt
 RUN pip install -r requirements.txt
 RUN pip install requests 
 RUN pip install opencv-python
-RUN pip install python-multipart 
+RUN pip install python-multipart openpyxl
 
 USER appuser
 EXPOSE 8000
