@@ -1,5 +1,6 @@
 PyMuPDF==1.26.3
 pandas
+python-multipart
 Pillow
 pytesseract
 openai

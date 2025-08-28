@@ -6,10 +6,7 @@ WORKDIR /home/appuser
 RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt ./requirements.txt
-RUN pip install -r requirements.txt
-RUN pip install requests 
-RUN pip install opencv-python
-RUN pip install python-multipart openpyxl
+RUN pip install -r requirements.txt 
 
 USER appuser
 EXPOSE 8000
