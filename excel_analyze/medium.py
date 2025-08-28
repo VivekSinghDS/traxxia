@@ -30,7 +30,7 @@ class MediumAnalysis:
             return None
         if pd.isna(numerator):
             return None
-        return float(numerator / denominator)
+        return float(numerator / denominator) * 100
     
     @staticmethod
     def clean_value(value):
@@ -56,7 +56,7 @@ class MediumAnalysis:
         revenue = self.get_value("Revenue")
         cogs = self.get_value("Cost of Goods Sold")
         gross_profit = self.get_value("Gross Profit")
-        operating_income = self.get_value("Operating Income")
+        operating_income = self.get_value("Operating Income (EBIT)")
         ebitda = self.get_value("EBITDA")
         net_income = self.get_value("Net Income")
         
@@ -71,9 +71,9 @@ class MediumAnalysis:
     
     def get_liquidity_metrics(self):
         """Calculate and return liquidity metrics as dictionary"""
-        current_assets = self.get_value("Current Assets")
-        current_liabilities = self.get_value("Current Liabilities")
-        inventory = self.get_value("Inventory")
+        current_assets = self.get_value("Total Assets")
+        current_liabilities = self.get_value("Total Liabilities")
+        inventory = 0
         
         metrics = {
             "current_ratio": self.safe_divide(current_assets, current_liabilities),
@@ -122,15 +122,28 @@ class MediumAnalysis:
         if not revenue_row.empty and monthly_cols:
             revenue_values = revenue_row[monthly_cols].values[0]
             revenue_series = pd.Series(revenue_values, index=monthly_cols)
-            
+            quarters = {
+                "Q1": ["January", "February", "March"],
+                "Q2": ["April", "May", "June"],
+                "Q3": ["July", "August", "September"],
+                "Q4": ["October", "November", "December"],
+            }
+        
+        # Aggregate into quarterly totals
+            quarterly_series = pd.Series({
+                q: revenue_series[months].sum() for q, months in quarters.items()
+            })
+    
+    # Calculate QoQ growth (quarter-on-quarter)
+            qoq_growth = quarterly_series.pct_change().to_dict()
             # Calculate growth rates and clean NaN values
-            qoq_growth = revenue_series.pct_change().to_dict()
-            yoy_growth = revenue_series.pct_change(12).to_dict()
+            # qoq_growth = revenue_series.pct_change().to_dict()
+            # yoy_growth = revenue_series.pct_change(12).to_dict()
             
             revenue_data = {
                 "values": self.clean_dict(revenue_series.to_dict()),
                 "qoq_growth": self.clean_dict(qoq_growth),
-                "yoy_growth": self.clean_dict(yoy_growth)
+                # "yoy_growth": self.clean_dict(yoy_growth)
             }
         
         # Net income trend
@@ -139,15 +152,26 @@ class MediumAnalysis:
         if not net_income_row.empty and monthly_cols:
             net_income_values = net_income_row[monthly_cols].values[0]
             net_income_series = pd.Series(net_income_values, index=monthly_cols)
-            
+            quarters = {
+                "Q1": ["January", "February", "March"],
+                "Q2": ["April", "May", "June"],
+                "Q3": ["July", "August", "September"],
+                "Q4": ["October", "November", "December"],
+            }
+        
+        # Aggregate into quarterly totals
+            quarterly_series = pd.Series({
+                q: net_income_series[months].sum() for q, months in quarters.items()
+            })
+            qoq_growth = quarterly_series.pct_change().to_dict()
             # Calculate growth rates and clean NaN values
-            qoq_growth = net_income_series.pct_change().to_dict()
-            yoy_growth = net_income_series.pct_change(12).to_dict()
+            # qoq_growth = net_income_series.pct_change().to_dict()
+            # yoy_growth = net_income_series.pct_change(12).to_dict()
             
             net_income_data = {
                 "values": self.clean_dict(net_income_series.to_dict()),
                 "qoq_growth": self.clean_dict(qoq_growth),
-                "yoy_growth": self.clean_dict(yoy_growth)
+                # "yoy_growth": self.clean_dict(yoy_growth)
             }
         
         return {
@@ -156,6 +180,7 @@ class MediumAnalysis:
         }
     
     def get_all_metrics(self):
+        
         """Get all financial metrics in a single dictionary"""
         return {
             "profitability": self.get_profitability_metrics(),
