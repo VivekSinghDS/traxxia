@@ -1,5 +1,8 @@
+from typing import Optional
 import pandas as pd
 import numpy as np
+from helpers import get_threshold_metrics
+import json 
 
 class MediumAnalysis:
     """
@@ -24,13 +27,13 @@ class MediumAnalysis:
         return np.nan
     
     @staticmethod
-    def safe_divide(numerator, denominator):
+    def safe_divide(numerator, denominator, percent: Optional[bool] = False):
         """Safely divide two numbers, handling zeros and NaN values"""
         if denominator in (0, np.nan, None) or pd.isna(denominator):
             return None
         if pd.isna(numerator):
             return None
-        return float(numerator / denominator) * 100
+        return float(numerator / denominator) if not percent else float(numerator / denominator) * 100
     
     @staticmethod
     def clean_value(value):
@@ -61,10 +64,10 @@ class MediumAnalysis:
         net_income = self.get_value("Net Income")
         
         metrics = {
-            "gross_margin": self.safe_divide(gross_profit, revenue),
-            "operating_margin": self.safe_divide(operating_income, revenue),
-            "ebitda_margin": self.safe_divide(ebitda, revenue),
-            "net_margin": self.safe_divide(net_income, revenue)
+            "gross_margin": self.safe_divide(gross_profit, revenue, True),
+            "operating_margin": self.safe_divide(operating_income, revenue, True),
+            "ebitda_margin": self.safe_divide(ebitda, revenue, True),
+            "net_margin": self.safe_divide(net_income, revenue, True)
         }
         
         return self.clean_dict(metrics)
@@ -180,14 +183,16 @@ class MediumAnalysis:
         }
     
     def get_all_metrics(self):
-        
+        result = get_threshold_metrics('kasnet')
+        result = json.loads(result)
         """Get all financial metrics in a single dictionary"""
         return {
             "profitability": self.get_profitability_metrics(),
             "liquidity": self.get_liquidity_metrics(),
             "investment": self.get_investment_metrics(),
             "leverage": self.get_leverage_metrics(),
-            "growth_trends": self.get_growth_trends()
+            "growth_trends": self.get_growth_trends(),
+            "threshold": result
         }
 
 

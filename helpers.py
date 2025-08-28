@@ -39,7 +39,32 @@ from googlesearch import search
 import requests
 import trafilatura
 
-
+def get_threshold_metrics(company_name):
+    response = client.chat.completions.create(
+            model="gpt-4.1",
+            messages=[
+                {"role": "system", "content": """ 
+                        YOU WILL BE GIVEN A COMPANY'S RESULT AND ITS PERFORMANCE AS TO HOW IT IS DOING. YOUR TASK IS TO 
+                        UNDERSTAND THEIR BUSINESS FORMAT, AND GIVE ME THE AVERAGE NUMBERS FROM THE MARKET FOR THE FOLLOWING 
+                        SEGMENT OF THE COMPANY. ONCE YOU ANALYZE THE COMPANY NAME, AND ITS SEGMENT, I WANT THE ANSWER IN THE 
+                        JSON FORMAT AS GIVEN BELOW. THIS IS VERY STRICT, AS I WILL PARSE IT IN THE FRONTEND, HENCE THE 
+                        FORMAT WILL NOT CHANGE AND SHOULD BE A VALID JSON ALL THE TIME.
+                        
+                        {{
+                            "ebitda": "", # a single value that represents ideal EBITDA of the similar companies
+                            "net_margin" : "", # a single value that represents ideal net_margin of the similar companies
+                            "operating_margin": "", # a single value that represents ideal operating_margin of the similar companies
+                            "quick_ratio" : "", # a single value that represents ideal quick_ratio of the similar companies
+                            "current_ratio": "", # a single value that represents ideal current_ratio of the similar companies
+                        }}
+                                        """},
+                {"role": "user", "content": f"Here is the company nae : {company_name}"},
+                {"role": "user", "content": "ALWAYS ALWAYS PROVIDE VALID JSON WITH NO ``` OR ANY CHARACTERS, JUST THE VALID JSON AND NOTHING ELSE."}
+            ],
+            temperature=0.3,
+            
+        )
+    return response.choices[0].message.content
     
 
 def fetch_top_articles(keyword, num_articles=3):

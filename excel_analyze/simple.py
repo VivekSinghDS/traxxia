@@ -1,5 +1,8 @@
+import json
 import pandas as pd
 import numpy as np
+
+from helpers import get_threshold_metrics
 
 class SimpleFinancialAnalysisAdapter:
     """
@@ -172,12 +175,15 @@ class SimpleFinancialAnalysisAdapter:
     
     def get_all_metrics(self):
         """Get all financial metrics in a single dictionary"""
+        result = get_threshold_metrics('kasnet')
+        result = json.loads(result)
         return {
             "Profitability": self.calculate_profitability(),
             "Growth Tracker": self.calculate_growth(),
             "Liquidity & Efficiency": self.calculate_liquidity(),
             "Investment Performance": self.calculate_investment(),
-            "Leverage & Risk": self.calculate_leverage()
+            "Leverage & Risk": self.calculate_leverage(),
+            "threshold": result
         }
 
 
