@@ -10,3 +10,4 @@ requests
 googlesearch-python 
 requests 
 trafilatura
+openpyxl
