@@ -63,57 +63,95 @@ class SimpleFinancialAnalysisAdapter:
         # Gross Margin
         if (revenue is not None and gross_profit is not None and 
             revenue["Year Total"] > 0):
-            results["Gross Margin"] = gross_profit["Year Total"] / revenue["Year Total"]
+            results["gross_margin"] = gross_profit["Year Total"] / revenue["Year Total"]
         else:
-            results["Gross Margin"] = None
+            results["gross_margin"] = None
         
         # Operating Margin
         if (revenue is not None and gross_profit is not None and 
             op_expenses is not None and revenue["Year Total"] > 0):
             operating_profit = gross_profit["Year Total"] - op_expenses["Year Total"]
-            results["Operating Margin"] = operating_profit / revenue["Year Total"]
+            results["operating_margin"] = operating_profit / revenue["Year Total"]
         else:
-            results["Operating Margin"] = None
+            results["operating_margin"] = None
         
         # EBITDA not possible (no depreciation/amortization in data)
-        results["EBITDA Margin"] = None
+        results["ebitda_margin"] = None
         
         # Net Margin
         if (revenue is not None and net_profit is not None and 
             revenue["Year Total"] > 0):
-            results["Net Margin"] = net_profit["Year Total"] / revenue["Year Total"]
+            results["net_margin"] = net_profit["Year Total"] / revenue["Year Total"]
         else:
-            results["Net Margin"] = None
+            results["net_margin"] = None
         
         return self.clean_dict(results)
     
     def calculate_growth(self):
         """Calculate and return growth trends as dictionary"""
-        revenue = self.get_row("Revenue")
-        net_profit = self.get_row("Net Profit")
+        monthly_cols = [c for c in self.df.columns if c not in ["Category", "Year Total"]]
         
-        if revenue is None or net_profit is None:
-            return {"Revenue Trend": None, "Net Income Trend": None}
+        # Revenue trend
+        revenue_row = self.df[self.df["Category"].str.strip().str.lower() == "revenue"]
+        revenue_data = {}
+        if not revenue_row.empty and monthly_cols:
+            revenue_values = revenue_row[monthly_cols].values[0]
+            revenue_series = pd.Series(revenue_values, index=monthly_cols)
+            quarters = {
+                "Q1": ["January", "February", "March"],
+                "Q2": ["April", "May", "June"],
+                "Q3": ["July", "August", "September"],
+                "Q4": ["October", "November", "December"],
+            }
         
-        # Extract monthly data
-        revenue_trend = []
-        net_profit_trend = []
+        # Aggregate into quarterly totals
+            quarterly_series = pd.Series({
+                q: revenue_series[months].sum() for q, months in quarters.items()
+            })
+    
+    # Calculate QoQ growth (quarter-on-quarter)
+            qoq_growth = quarterly_series.pct_change().to_dict()
+            # Calculate growth rates and clean NaN values
+            # qoq_growth = revenue_series.pct_change().to_dict()
+            # yoy_growth = revenue_series.pct_change(12).to_dict()
+            
+            revenue_data = {
+                "values": self.clean_dict(revenue_series.to_dict()),
+                "qoq_growth": self.clean_dict(qoq_growth),
+                # "yoy_growth": self.clean_dict(yoy_growth)
+            }
         
-        for month in self.monthly_columns:
-            if month in revenue.index:
-                revenue_trend.append(revenue[month])
-            else:
-                revenue_trend.append(None)
+        # Net income trend
+        net_income_row = self.df[self.df["Category"].str.strip().str.lower() == "net income"]
+        net_income_data = {}
+        if not net_income_row.empty and monthly_cols:
+            net_income_values = net_income_row[monthly_cols].values[0]
+            net_income_series = pd.Series(net_income_values, index=monthly_cols)
+            quarters = {
+                "Q1": ["January", "February", "March"],
+                "Q2": ["April", "May", "June"],
+                "Q3": ["July", "August", "September"],
+                "Q4": ["October", "November", "December"],
+            }
         
-        for month in self.monthly_columns:
-            if month in net_profit.index:
-                net_profit_trend.append(net_profit[month])
-            else:
-                net_profit_trend.append(None)
+        # Aggregate into quarterly totals
+            quarterly_series = pd.Series({
+                q: net_income_series[months].sum() for q, months in quarters.items()
+            })
+            qoq_growth = quarterly_series.pct_change().to_dict()
+            # Calculate growth rates and clean NaN values
+            # qoq_growth = net_income_series.pct_change().to_dict()
+            # yoy_growth = net_income_series.pct_change(12).to_dict()
+            
+            net_income_data = {
+                "values": self.clean_dict(net_income_series.to_dict()),
+                "qoq_growth": self.clean_dict(qoq_growth),
+                # "yoy_growth": self.clean_dict(yoy_growth)
+            }
         
-        results = {
-            "Revenue Trend": revenue_trend, 
-            "Net Income Trend": net_profit_trend
+        return {
+            "revenue": revenue_data,
+            "net_income": net_income_data
         }
         
         return self.clean_dict(results)
@@ -123,9 +161,8 @@ class SimpleFinancialAnalysisAdapter:
         # Current Ratio, Quick Ratio, CCC not possible 
         # (we don't have balance sheet items like current assets/liabilities/inventory)
         results = {
-            "Current Ratio": None, 
-            "Quick Ratio": None, 
-            "Cash Conversion Cycle": None
+            "current_ratio": None, 
+            "quick_ratio": None, 
         }
         
         return self.clean_dict(results)
@@ -135,9 +172,9 @@ class SimpleFinancialAnalysisAdapter:
         # ROA, ROE, ROIC not possible 
         # (we don't have assets, equity, capital invested)
         results = {
-            "ROA": None, 
-            "ROE": None, 
-            "ROIC": None
+            "roa": None, 
+            "roe": None, 
+            "roic": None
         }
         
         return self.clean_dict(results)
@@ -147,8 +184,8 @@ class SimpleFinancialAnalysisAdapter:
         # Debt-to-Equity, Interest Coverage not possible 
         # (no debt/equity/interest expense data in sheet)
         results = {
-            "Debt-to-Equity": None, 
-            "Interest Coverage": None
+            "debt_to_equity": None, 
+            "interest_coverage": None
         }
         
         return self.clean_dict(results)
@@ -178,11 +215,11 @@ class SimpleFinancialAnalysisAdapter:
         result = get_threshold_metrics('kasnet')
         result = json.loads(result)
         return {
-            "Profitability": self.calculate_profitability(),
-            "Growth Tracker": self.calculate_growth(),
-            "Liquidity & Efficiency": self.calculate_liquidity(),
-            "Investment Performance": self.calculate_investment(),
-            "Leverage & Risk": self.calculate_leverage(),
+            "profitability": self.calculate_profitability(),
+            "growth_trends": self.calculate_growth(),
+            "liquidity": self.calculate_liquidity(),
+            "investment": self.calculate_investment(),
+            "leverage": self.calculate_leverage(),
             "threshold": result
         }
 

@@ -17,11 +17,13 @@ class MediumAnalysis:
             df (pd.DataFrame): DataFrame containing financial data with 'Category' column
         """
         self.df = df
-    
+        # print(df[df['Category']])
+        # self.df['Total Assets'] = self.df['Equity'] + self.df['Total Liabilities']
     def get_value(self, row_name, col="Year Total"):
         """Extract a specific value from the DataFrame"""
         row = self.df[self.df["Category"].str.strip().str.lower() == row_name.lower()]
         if not row.empty and col in self.df.columns:
+            # print(row[col])
             val = row[col].values[0]
             return float(val) if pd.notnull(val) else np.nan
         return np.nan
@@ -88,10 +90,11 @@ class MediumAnalysis:
     def get_investment_metrics(self):
         """Calculate and return investment performance metrics as dictionary"""
         net_income = self.get_value("Net Income")
+        print(net_income)
         operating_income = self.get_value("Operating Income")
-        total_assets = self.get_value("Total Assets")
-        shareholder_equity = self.get_value("Shareholder Equity")
-        debt = self.get_value("Total Debt")
+        total_assets = self.get_value('Equity') + self.get_value('Total Liabilities') # equity + liabilities
+        shareholder_equity = self.get_value("Shareholder Equity") if self.get_value('Shareholder Equity') is not None else 0
+        debt = self.get_value("- Short-term Debt")
         
         metrics = {
             "roa": self.safe_divide(net_income, total_assets),
