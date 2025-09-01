@@ -2,6 +2,7 @@ from io import BytesIO
 from fastapi import FastAPI, HTTPException, Header, Request, UploadFile, File
 from openai import OpenAI
 import os
+import json
 from typing import Optional, List
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
@@ -31,14 +32,14 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 INCOMPLETE_QA_PAYLOAD = [{"role": "user", "content": "ADD `NOT ENOUGH DATA` TO THE VALUES IF YOU FEEL THE DATA IS NOT ENOUGH"}]
 
 @app.post("/analyze")
-async def analyze_qa(request: AnalyzeRequest):
+async def analyze_qa(request_: AnalyzeRequest, request: Request):
     """
     Analyze a question-answer pair and provide validation feedback.
     Returns JSON with valid status and optional feedback.
     """
     try:
         # Create the prompt for GPT-3.5-turbo
-        prompt_ = prompt.format(question=request.question, answer=request.answer)
+        prompt_ = prompt.format(question=request_.question, answer=request_.answer)
         
         # Call OpenAI API
         response = client.chat.completions.create(
@@ -352,19 +353,24 @@ async def upload_and_analyze(file: UploadFile = File(...), questions: Optional[L
     #     raise HTTPException(status_code=500, detail=f"Error processing file upload: {str(e)}")
 
 @app.post("/full-swot-portfolio")
-async def full_swot_portfolio(request: FullSwotPortfolioRequest):
+async def full_swot_portfolio(request_: FullSwotPortfolioRequest, request: Request):
     """
     Create comprehensive SWOT portfolio analysis from all questions and answers.
     Returns detailed SWOT analysis with strategic implications and recommendations.
     """
     try:
-        prompt_ = prompt_for_full_swot_portfolio.format(questions=request.questions, answers=request.answers)
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
+        prompt_ = prompt_for_full_swot_portfolio.format(questions=request_.questions, answers=request_.answers)
+        payload = [
                 {"role": "system", "content": system_prompt_for_full_swot_portfolio},
                 {"role": "user", "content": prompt_}
-            ] + INCOMPLETE_QA_PAYLOAD,
+            ]
+        if request.headers.get('deep_search'):
+            web_data = perform_web_search(request_.questions, request_.answers)
+            payload += [{"role": "user", "content": f"Here are some of the competitors of this company on global and domestic scale. Use this as a context, to help interpret the baseline of the current company:  \n {web_data}"}]        
+            
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=payload + INCOMPLETE_QA_PAYLOAD,
             temperature=0.3,
             max_tokens=1000
         )
@@ -1479,45 +1485,31 @@ async def pestel_analysis(request_: PestelAnalysisRequest, request: Request):
             {"role": "user", "content": prompt_},
         ]
     if request.headers.get('deep_search'):
-        web_data: str = perform_web_search(request_.questions, request_.answers)
-        payload += [{"role": "user", "content": f"Here is the company name for web searching \n {web_data}"}]
-    
-        # print(payload)
-        response = client.responses.create(
-            model="gpt-4.1",
-            input=payload,
-            tools=[{"type": "web_search_preview", "search_context_size": "high"}],
-        )
-        assistant_text = ""
-        for message in response.output:
-            if message.type == "message":
-                for content in message.content:
-                    if content.type == "output_text":
-                        assistant_text += content.text
+        web_data = (perform_web_search(request_.questions, request_.answers))
+        payload += [{"role": "user", "content": f"Here are some of the competitors of this company on global and domestic scale. Use this as a context, to help interpret the baseline of the current company:  \n {web_data}"}]        
         
-        
-    else:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=payload,
-            temperature=0.3,
-            max_tokens=1200
-        )
-        assistant_text = response.choices[0].message.content.strip()
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=payload,
+        temperature=0.3,
+        max_tokens=1200
+    )
+    assistant_text = response.choices[0].message.content.strip()
     # Try to parse the JSON response
     import json
     try:
         result = json.loads(assistant_text)
         return result
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
+        print(e)
         # Fallback if JSON parsing fails
         raise HTTPException(
             status_code=500, 
             detail="Error parsing PESTEL analysis response. Please try again."
         )
             
-    # except Exception as e:
-    #     raise HTTPException(status_code=500, detail=f"Error analyzing PESTEL analysis: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing PESTEL analysis: {str(e)}")
 
 @app.post("/pestel-analysis-with-file")
 async def pestel_analysis_with_file(
@@ -1596,54 +1588,20 @@ async def strategic_analysis(request_: StrategicAnalysisRequest, request: Reques
         prompt_ = prompt_for_strategic_analysis.format(questions=request_.questions, answers=request_.answers)
         payload = [
                 {"role": "system", "content": system_prompt_for_strategic_analysis},
-                {"role": "user", "content": prompt_}
+                {"role": "user", "content": prompt_},
             ]
         
         if request.headers.get('deep_search'):
-            company_name: str = perform_web_search(request_.questions, request_.answers)
-            company_data: str = fetch_top_articles(keyword = company_name, num_articles=2)
-            print(company_data)
-            payload += [{"role": "user", "content": f"Here is the company name for web searching \n {company_name} and its associated data is as follows : \n {company_data}"},
-                        {"role": "user", "content": "PROVIDE A VALID JSON WITHOUT ANY BACKTICKS OR SPECIAL CHARACTERS, JUST VALID JSON"}]
-            response = client.chat.completions.create(
-                model="gpt-4o",
-                messages=payload,
-                temperature=0,
-                max_tokens=3700
-            )
-            assistant_text = response.choices[0].message.content.strip()
-        
-            # print(payload)
-            # response = client.responses.create(
-            #     model="gpt-4.1",
-            #     input=payload,
-            #     max_output_tokens=5000,
-            #     tools=[{"type": "web_search_preview", "search_context_size": "low"}],
-                
-            # )
-            # assistant_text = ""
-            # web_search_results = []
-            # for message in response.output:
-            #     if message.type == "tool" and message.tool == "web_search_preview":
-            #         # This is where web search results appear
-            #         web_search_results.append(message)
-
-            # print("==== WEB SEARCH RESULTS ====")
-            # print(web_search_results)
-            # for message in response.output:
-            #     if message.type == "message":
-            #         for content in message.content:
-            #             if content.type == "output_text":
-            #                 assistant_text += content.text
-        else:
-            
-            response = client.chat.completions.create(
-                model="gpt-4o",
-                messages=payload,
-                temperature=0.3,
-                max_tokens=3700
-            )
-            assistant_text = response.choices[0].message.content.strip()
+            web_data = (perform_web_search(request_.questions, request_.answers))
+            payload += [{"role": "user", "content": f"Here are some of the competitors of this company on global and domestic scale. Use this as a context, to help interpret the baseline of the current company:  \n {web_data}"}]        
+        payload += [{"role": "user", "content": "ALWAYS GIVE VALID JSON AND DON'T USE BACKTICKS LIKE ```. I NEED JUST THE JSON AND NOTHING ELSE"}]
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=payload,
+            temperature=0.3,
+            max_tokens=3700
+        )
+        assistant_text = response.choices[0].message.content.strip()
         
         # Try to parse the JSON response
         import json
@@ -1730,19 +1688,27 @@ async def strategic_analysis_with_file(
         raise HTTPException(status_code=500, detail=f"Error analyzing strategic analysis with file: {str(e)}")
 
 @app.post("/porter-analysis")
-async def porter_analysis(request: PorterAnalysisRequest):
+async def porter_analysis(request_: PorterAnalysisRequest, request: Request):
     """
     Create comprehensive Porter's Five Forces analysis from questions and answers.
     Returns detailed Porter's Five Forces analysis with competitive landscape and strategic implications.
     """
     try:
-        prompt_ = prompt_for_porter_analysis.format(questions=request.questions, answers=request.answers)
+        prompt_ = prompt_for_porter_analysis.format(questions=request_.questions, answers=request_.answers)
+        payload = [
+                {"role": "system", "content": system_prompt_for_porter_analysis},
+                {"role": "user", "content": prompt_},
+                
+            ]
+        if request.headers.get('deep_search'):
+            web_data = (perform_web_search(request_.questions, request_.answers))
+            payload += [{"role": "user", "content": f"Here are some of the competitors of this company on global and domestic scale. Use this as a context, to help interpret the baseline of the current company:  \n {web_data}"}]        
+
+        payload += [{"role": "user", "content": "VERY IMPORTANT RULE : ALWAYS GIVE VALID JSON AND DON'T USE BACKTICKS LIKE ```. I NEED JUST THE JSON AND NOTHING ELSE"}]
+
         response = client.chat.completions.create(
             model="gpt-4o",
-            messages=[
-                {"role": "system", "content": system_prompt_for_porter_analysis},
-                {"role": "user", "content": prompt_}
-            ],
+            messages=payload,
             temperature=0.3,
             max_tokens=2000
         )
@@ -1754,6 +1720,7 @@ async def porter_analysis(request: PorterAnalysisRequest):
             result = json.loads(result_text)
             return result
         except json.JSONDecodeError:
+            print(result_text)
             # Fallback if JSON parsing fails
             raise HTTPException(
                 status_code=500, 
@@ -1761,6 +1728,7 @@ async def porter_analysis(request: PorterAnalysisRequest):
             )
             
     except Exception as e:
+        print(result_text)
         raise HTTPException(status_code=500, detail=f"Error analyzing Porter analysis: {str(e)}")
 
 @app.post("/porter-analysis-with-file")

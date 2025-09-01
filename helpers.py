@@ -1,3 +1,4 @@
+from collections import defaultdict
 from copy import deepcopy
 import fitz  # PyMuPDF
 import pandas as pd
@@ -17,23 +18,120 @@ from openai import OpenAI
 # Configure logging
 from dotenv import load_dotenv
 from constants import * 
+import requests
+from datetime import datetime, timedelta
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-def perform_web_search(questions, answers):
+def get_newsapi_analysis(company_name: str):
+    base_url = "https://newsapi.org/v2/everything"
+
+    to_date = datetime.now()
+    from_date = to_date - timedelta(days=7)
+
+    params = {
+        'q': company_name,
+        'from': from_date.strftime('%Y-%m-%d'),
+        'to': to_date.strftime('%Y-%m-%d'),
+        'sortBy': 'relevancy',
+        'pageSize': 5,
+        'apiKey': os.environ.get("NEWSAPI_API_KEY")
+    }
+
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        print(response.json())
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching news: {e}")
+        return {}
+
+def alpha_vant_analysis(company_name: str):
+    API_KEY = os.environ.get('ALPHA_VANT_API_KEY')
+    # replace the "demo" apikey below with your own key from https://www.alphavantage.co/support/#api-key
+    url = f'https://www.alphavantage.co/query?function=OVERVIEW&symbol={company_name}&apikey={API_KEY}'
+    r = requests.get(url)
+    data = r.json()
+    return data
+
+def get_competitors(questions, answers):
+    messages = [
+        {
+            "role": "system",
+            "content": '''YOU ARE A FINANCIAL ANALYSIS EXPERT. YOUR TASK IS TO PROVIDE ME A LIST OF COMPETITOR'S NAME THAT ARE IN THE 
+                        SAME DOMAIN FOR THE QUESTIONS AND ANSWERS PROVIDED ABOUT THE ORGANIZATION. THE RESPONSE FORMAT, SHOULD ALWAYS FOLLOW THE 
+                        BELOW GIVEN FORMAT. 
+                        
+                        {{
+                            "competitors": {{
+                                "domestic": [], # minimum three competitors level
+                                "international": [] # minimum three competitors that are international levels
+                            }}
+                        }}
+                        
+                        IMPORTANT RULE : 
+                        1. ALWAYS PROVIDE VALID JSON 
+                        2. ALWAYS ALWAYS PROVIDE JUST THE JSON AND NOTHING ELSE 
+                        3. THIS IS GOING TO BE PARSED FOR THE BACKEND, SO DO NOT GIVE ANYTHING OTHER THAN THE JSON 
+                        4. I DON'T WANT BACKTICKS OR ANYTHING IN THE RESPONSE 
+                        5. JUST NEED THE PRODUCTION QUALITY JSON HERE. 
+                        6. MAKE SURE THAT THE COMPETITOR NAMES YOU PROVIDE CAN BE USED FOR ALPHA-VANTAGE API. THIS IS VERY
+                        IMPORTANT TO ME, AS I AM GOING TO USE THE SAME VALUE TO DO THE API SEARCH. HENCE, HAVING THE TICKERS
+                        OF THE COMPANY NAME IS VERY VERY VERY APPROPRIATE FOR ME.
+                        
+                        
+                        '''
+        },
+        {
+            "role": "user",
+            "content": f'''
+                        HERE ARE THE QUESTIONS AND ANSWERS FOR WHICH I NEED THE COMPETITORS
+                        QUESTIONS : 
+                        {questions}
+                        
+                        ANSWERS : 
+                        {answers}
+            '''
+        },
+        {
+            "role": "user",
+            "content": "This is good, just make sure that the response is valid json"
+        }
+    ]
     response = client.chat.completions.create(
-            model="gpt-4.1",
-            messages=[
-                {"role": "system", "content": "YOUR TASK IS TO PROVIDE ONLY COMPANY NAME FOR WHICH THIS ANSWERS ARE ABOUT. DO NOT PROVIDE ANYTHING ELSE THAN THAT"},
-                {"role": "user", "content": f"{answers}"}
-            ],
-            temperature=0.3,
-            
+            model="gpt-4o",
+            messages=messages,
+            max_tokens=1000,
+            temperature=0.3
         )
-    return response.choices[0].message.content
+        
+    try:
+        result_text = response.choices[0].message.content.strip()
+        print(result_text)
+        competitors = json.loads(result_text)
+        return competitors
+    except Exception as error:
+        print(error)
+        return {"competitors": {}}
+         
+def perform_web_search(questions, answers):
+    competitors = get_competitors(questions, answers)
+    result = {"competitors": [], "news": []}
+    for companies in competitors['competitors']['domestic']:
+        for company in companies[:1]:
+            result["competitors"].append({company: json.dumps(alpha_vant_analysis(company))})
+            result['news'].append({company: json.dumps(get_newsapi_analysis(company))})
+    
+    for companies in competitors['competitors']['international']:
+        for company in companies[:1]:
+            result["competitors"].append({company: json.dumps(alpha_vant_analysis(company))})
+            result['news'].append({company: json.dumps(get_newsapi_analysis(company))})
+    return result
+
 
 from googlesearch import search
 import requests
@@ -1020,6 +1118,7 @@ def merge_json_values(existing_json, new_json):
     
     merge_recursive(merged, new_json)
     return merged
+  
   
 def process_file_and_questions(file: UploadFile, questions : Optional[List[str]], answers: Optional[List[str]], reference: dict):
     total_pages = 0
