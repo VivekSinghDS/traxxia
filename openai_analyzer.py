@@ -117,15 +117,21 @@ async def competitor_finding(request: AnalyzeAllRequest):
         competitors = response.choices[0].message.content.strip()
         competitors = competitors.split(',')
         competitor_swot_data = {}
+        references = {"source": list()}
+
         for competitor in competitors:
             competitor = competitor.strip() 
             swot_data = analyzer.generate_swot_analysis(competitor, days_back=1)
             if swot_data:
-                competitor_swot_data[competitor] = swot_data
-                
-        print(request.questions, request.answers)
+                # print(type(swot_data))
+                for type_ in swot_data:
+                    for list_ in (swot_data[type_]):
+                        references['source'].append(list_['source'])
+                    break
+                #     references['source'].append(type_)
+                # competitor_swot_data[competitor] = swot_data
         prompt_ = prompt_for_swot_analysis.format(competitors=competitors, swot_data=competitor_swot_data, questions=request.questions, answers=request.answers)
-        print(prompt_)
+        # print(prompt_)
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
@@ -136,7 +142,10 @@ async def competitor_finding(request: AnalyzeAllRequest):
             max_tokens=500
         )
         result_text = response.choices[0].message.content.strip()
-        return result_text
+        import json 
+        result = json.loads(result_text)
+        result['reference'] = references['source'][:5]
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error finding competitors: {str(e)}")
 
@@ -1590,7 +1599,7 @@ async def strategic_analysis(request_: StrategicAnalysisRequest, request: Reques
                 {"role": "system", "content": system_prompt_for_strategic_analysis},
                 {"role": "user", "content": prompt_},
             ]
-        
+        references = {}
         if request.headers.get('deep_search'):
             web_data = (perform_web_search(request_.questions, request_.answers))
             payload += [{"role": "user", "content": f"Here are some of the competitors of this company on global and domestic scale. Use this as a context, to help interpret the baseline of the current company:  \n {web_data}"}]        
@@ -1857,10 +1866,24 @@ async def excel_analysis(request: Request,
     
     if source == 'medium':
         simple_analysis = MediumAnalysis(df)
-        return simple_analysis.get_all_metrics()
+        analysis = simple_analysis.get_all_metrics()
+        result = analysis.copy()
+        result.pop('threshold')
+        result['profitability']['operating_margin_threshold'] = analysis['threshold']['operating_margin']
+        result['profitability']['net_margin_threshold'] = analysis['threshold']['net_margin']
+        result['liquidity']['quick_ratio_threshold'] = analysis['threshold']['quick_ratio']
+        result['liquidity']['current_ratio_threshold'] = analysis['threshold']['current_ratio']
+        return result 
     elif source == 'simple':
         simple_analysis = SimpleFinancialAnalysisAdapter(df)
-        return simple_analysis.get_all_metrics()
+        analysis = simple_analysis.get_all_metrics()
+        result = analysis.copy()
+        result.pop('threshold')
+        result['profitability']['operating_margin_threshold'] = analysis['threshold']['operating_margin']
+        result['profitability']['net_margin_threshold'] = analysis['threshold']['net_margin']
+        result['liquidity']['quick_ratio_threshold'] = analysis['threshold']['quick_ratio']
+        result['liquidity']['current_ratio_threshold'] = analysis['threshold']['current_ratio']
+        return result 
     
     return ''
 if __name__ == "__main__":

@@ -998,7 +998,7 @@ The format should be like this :
     "weaknesses": "string data",
     "opportunities": "string data",
     "threats": "string data",
-    "key_improvements": "" # actionable items that the organization can take 
+    "key_improvements": [""] # actionable items that the organization can take 
 }}
 '''
 
@@ -1570,7 +1570,7 @@ Create PESTEL analysis and return it in the following JSON format:
                 }}
             ]
         }},
-        "key_improvements": "" # actionable items that the organization can take 
+        "key_improvements": [""] # actionable items that the organization can take 
     }}
 }}
 
@@ -2339,7 +2339,7 @@ Create Porter's Five Forces analysis and return it in the following JSON format:
                 }}
             ]
         }},
-        "key_improvements": "" # actionable items that the organization can take 
+        "key_improvements": [""] # actionable items that the organization can take 
     }}
 }}
 Guidelines:
