@@ -2115,7 +2115,31 @@ Create strategic analysis and return it in the following JSON format:
                     "integration_point": "[Where feedback is used]"
                 }}
             ]
-        }}
+        }},
+        "competitive_landscape": {{
+            "direct_competitors": [
+                {{
+                    "name": "", # Competitor name
+                    "market_share": "", # % or qualitative
+                    "strengths": [], # Key strengths
+                    "weaknesses": [] # Key weaknesses
+                }}
+            ],
+            "indirect_competitors": [
+                {{
+                    "name": "", # Indirect competitor category
+                    "threat_level": "", # High/Medium/Low
+                    "competitive_advantage": "" # Their main edge
+                }}
+            ],
+            "potential_entrants": [
+                {{
+                    "category": "", # e.g., "Tech companies", "Startups"
+                    "likelihood": "", # High/Medium/Low
+                    "barriers": "" # Key barriers they will face
+                }}
+            ]
+        }},
     }}
 }}
 
