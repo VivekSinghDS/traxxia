@@ -1028,8 +1028,8 @@ Create competitive advantage analysis and return it in the following JSON format
     "competitiveAdvantage": {{
         "differentiators": [
             {{
-                "type": "service",
-                "description": "1-on-1 mentoring",
+                "type": "", # type of differentiator like service etc 
+                "description": "",
                 "uniqueness": 9,
                 "customerValue": 9,
                 "sustainability": 7,
@@ -1042,7 +1042,7 @@ Create competitive advantage analysis and return it in the following JSON format
         "competitivePosition": {{
             "overallScore": "", # a value that describes how the company is performing overall
             "marketPosition": "", # a value that describes how adequately it is market positioned
-            "key_improvements": [""], # an array of points they can take to improve 
+            "key_improvements": [""], # an array of points they are Specific, Measurable, Achievable, Relevant, and Time-bound
             "sustainableAdvantages": 2,
             "vulnerableAdvantages": 1
         }},
