@@ -1040,8 +1040,9 @@ Create competitive advantage analysis and return it in the following JSON format
             }}
         ],
         "competitivePosition": {{
-            "overallScore": 7.5,
-            "marketPosition": "challenger",
+            "overallScore": "", # a value that describes how the company is performing overall
+            "marketPosition": "", # a value that describes how adequately it is market positioned
+            "key_improvements": [""], # an array of points they can take to improve 
             "sustainableAdvantages": 2,
             "vulnerableAdvantages": 1
         }},
@@ -2120,7 +2121,7 @@ Create strategic analysis and return it in the following JSON format:
         "competitive_landscape": {{
             "direct_competitors": [
                 {{
-                    "name": "", # Competitor name
+                    "name": "", # a direct competitor of the mentioned company
                     "market_share": "", # % or qualitative
                     "strengths": [], # Key strengths
                     "weaknesses": [] # Key weaknesses
