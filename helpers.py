@@ -155,7 +155,10 @@ def get_threshold_metrics(company_name):
                             "quick_ratio" : "", # a single value that represents ideal quick_ratio of the similar companies
                             "current_ratio": "", # a single value that represents ideal current_ratio of the similar companies
                             "debt_to_equity" : "", a single value that represents ideal debt_to_equity of similar companies
-                            "interest_coverage": "" #a single value that represents ideal interest_coverage of similar companies
+                            "interest_coverage": "", #a single value that represents ideal interest_coverage of similar companies
+                            "roi": "", # a single value that represents ideal roi of similar companies
+                            "roe": "", # a single value that represents ideal roe of similar companies
+                            "roic": "" # # a single value that represents ideal roic of similar companies
                         }}
                                         """},
                 {"role": "user", "content": f"Here is the company nae : {company_name}"},
