@@ -150,6 +150,7 @@ def get_threshold_metrics(company_name):
                         
                         {{
                             "ebitda": "", # a single value that represents ideal EBITDA of the similar companies
+                            "gross_margin": "", # a single value that represents ideal gross margin of similar company
                             "net_margin" : "", # a single value that represents ideal net_margin of the similar companies
                             "operating_margin": "", # a single value that represents ideal operating_margin of the similar companies
                             "quick_ratio" : "", # a single value that represents ideal quick_ratio of the similar companies

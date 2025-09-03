@@ -1871,6 +1871,8 @@ async def excel_analysis(request: Request,
         result.pop('threshold')
         result['profitability']['operating_margin_threshold'] = analysis['threshold']['operating_margin']
         result['profitability']['net_margin_threshold'] = analysis['threshold']['net_margin']
+        result['profitability']['gross_margin_threshold'] = analysis['threshold']['gross_margin']
+        result['profitability']['ebitda_threshold'] = analysis['threshold']['ebitda']
         result['liquidity']['quick_ratio_threshold'] = analysis['threshold']['quick_ratio']
         result['liquidity']['current_ratio_threshold'] = analysis['threshold']['current_ratio']
         result['leverage']['interest_coverage_threshold'] = analysis['threshold']['interest_coverage']
@@ -1885,6 +1887,8 @@ async def excel_analysis(request: Request,
         result = analysis.copy()
         result.pop('threshold')
         result['profitability']['operating_margin_threshold'] = analysis['threshold']['operating_margin']
+        result['profitability']['gross_margin_threshold'] = analysis['threshold']['gross_margin']
+        result['profitability']['ebitda_threshold'] = analysis['threshold']['ebitda']
         result['profitability']['net_margin_threshold'] = analysis['threshold']['net_margin']
         result['liquidity']['quick_ratio_threshold'] = analysis['threshold']['quick_ratio']
         result['liquidity']['current_ratio_threshold'] = analysis['threshold']['current_ratio']
