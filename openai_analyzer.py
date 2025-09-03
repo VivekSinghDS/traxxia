@@ -47,7 +47,7 @@ async def analyze_qa(request_: AnalyzeRequest, request: Request):
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": prompt_}
-            ] + INCOMPLETE_QA_PAYLOAD,
+            ] ,# INCOMPLETE_QA_PAYLOAD,
             temperature=0.3,
             max_tokens=200
         )
@@ -80,7 +80,7 @@ async def analyze_all_qa(request: AnalyzeAllRequest):
             messages=[
                 {"role": "system", "content": system_prompt_for_all_questions_answers},
                 {"role": "user", "content": prompt}
-            ] + INCOMPLETE_QA_PAYLOAD,
+            ] ,# INCOMPLETE_QA_PAYLOAD,
             temperature=0,
             max_tokens=500
         )
@@ -298,7 +298,7 @@ async def capability_heatmap(request: CapabilityHeatmapRequest):
             messages=[
                 {"role": "system", "content": system_prompt_for_capability_heatmap},
                 {"role": "user", "content": prompt_}
-            ] + INCOMPLETE_QA_PAYLOAD,
+            ] ,# INCOMPLETE_QA_PAYLOAD,
             temperature=0.3,
             max_tokens=800
         )
@@ -379,7 +379,7 @@ async def full_swot_portfolio(request_: FullSwotPortfolioRequest, request: Reque
             
         response = client.chat.completions.create(
             model="gpt-4o",
-            messages=payload + INCOMPLETE_QA_PAYLOAD,
+            messages=payload ,# INCOMPLETE_QA_PAYLOAD,
             temperature=0.3,
             max_tokens=1000
         )
@@ -482,7 +482,7 @@ async def channel_effectiveness(request: ChannelEffectivenessRequest):
             messages=[
                 {"role": "system", "content": system_prompt_for_channel_effectiveness},
                 {"role": "user", "content": prompt_}
-            ]+ INCOMPLETE_QA_PAYLOAD,
+            ],# INCOMPLETE_QA_PAYLOAD,
             temperature=0.3,
             max_tokens=900
         )
@@ -584,7 +584,7 @@ async def expanded_capability_heatmap(request: ExpandedCapabilityHeatmapRequest)
             messages=[
                 {"role": "system", "content": system_prompt_for_expanded_capability_heatmap},
                 {"role": "user", "content": prompt_}
-            ]+ INCOMPLETE_QA_PAYLOAD,
+            ],# INCOMPLETE_QA_PAYLOAD,
             temperature=0.3,
             max_tokens=1000
         )
@@ -686,7 +686,7 @@ async def strategic_radar(request: StrategicRadarRequest):
             messages=[
                 {"role": "system", "content": system_prompt_for_strategic_radar},
                 {"role": "user", "content": prompt_}
-            ]+ INCOMPLETE_QA_PAYLOAD,
+            ],# INCOMPLETE_QA_PAYLOAD,
             temperature=0.3,
             max_tokens=800
         )
@@ -787,7 +787,7 @@ async def maturity_scoring(request: MaturityScoringRequest):
             messages=[
                 {"role": "system", "content": system_prompt_for_maturity_scoring},
                 {"role": "user", "content": prompt_}
-            ]+ INCOMPLETE_QA_PAYLOAD,
+            ],# INCOMPLETE_QA_PAYLOAD,
             temperature=0.3,
             max_tokens=1000
         )
