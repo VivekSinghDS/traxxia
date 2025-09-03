@@ -999,6 +999,7 @@ The format should be like this :
     "opportunities": "string data",
     "threats": "string data",
     "key_improvements": [""] # actionable items that the organization can take 
+    "competitors": [""] #DO NOT MENTION THE NAME OF COMPETITORS BUT MENTION WHAT ARE SOME OF THE THINGS COMPETITORS ARE DOING
 }}
 '''
 

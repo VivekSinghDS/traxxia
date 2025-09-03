@@ -1883,6 +1883,8 @@ async def excel_analysis(request: Request,
         result['profitability']['net_margin_threshold'] = analysis['threshold']['net_margin']
         result['liquidity']['quick_ratio_threshold'] = analysis['threshold']['quick_ratio']
         result['liquidity']['current_ratio_threshold'] = analysis['threshold']['current_ratio']
+        result['leverage']['interest_coverage_threshold'] = analysis['threshold']['interest_coverage']
+        result['leverage']['debt_to_equity_threshold'] = analysis['threshold']['debt_to_equity']
         return result 
     
     return ''
