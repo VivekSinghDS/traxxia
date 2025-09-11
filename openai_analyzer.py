@@ -372,6 +372,7 @@ async def full_swot_portfolio(request_: FullSwotPortfolioRequest, request: Reque
         ]
     if request.headers.get('deep_search'):
         web_data = perform_web_search(request_.questions, request_.answers)
+        
         payload += [{"role": "user", "content": f"Here are some of the competitors of this company on global and domestic scale. Use this as a context, to help interpret the baseline of the current company:  \n {web_data}"}]        
     
     # sample_data = {
@@ -491,29 +492,11 @@ async def full_swot_portfolio(request_: FullSwotPortfolioRequest, request: Reque
     # import json 
     # payload += [{"role": "user", "content": "here is some insights :" + json.dumps(sample_data, indent=2)}]
     print(payload)
-    return perplexity_analysis(system_prompt=system_prompt_for_full_swot_portfolio, user_prompt = payload[1]['content'])
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=payload ,# INCOMPLETE_QA_PAYLOAD,
-        temperature=0.3,
-        max_tokens=1000
-    )
-    result_text = response.choices[0].message.content.strip()
+    result = perplexity_analysis(system_prompt=system_prompt_for_full_swot_portfolio, user_prompt = payload[1]['content'])
+    import json 
+    result = dict(json.loads(result))
+    return result
     
-    # Try to parse the JSON response
-    import json
-    try:
-        result = json.loads(result_text)
-        return result
-    except json.JSONDecodeError:
-        # Fallback if JSON parsing fails
-        raise HTTPException(
-            status_code=500, 
-            detail="Error parsing SWOT portfolio response. Please try again."
-        )
-        
-    # except Exception as e:
-    #     raise HTTPException(status_code=500, detail=f"Error analyzing SWOT portfolio: {str(e)}")
 
 @app.post("/full-swot-portfolio-with-file")
 async def full_swot_portfolio_with_file(
