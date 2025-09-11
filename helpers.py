@@ -26,11 +26,38 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+import requests
+
+def perplexity_analysis(system_prompt, user_prompt):
+# Set up the API endpoint and headers
+    url = "https://api.perplexity.ai/chat/completions"
+    headers = {
+        "Authorization": "Bearer "+os.environ.get("PERPLEXITY_KEY"),  # Replace with your actual API key
+        "Content-Type": "application/json"
+    }
+
+    # Define the request payload
+    payload = {
+        "model": "sonar-pro",
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+    }
+
+    # Make the API call
+    response = requests.post(url, headers=headers, json=payload)
+    print(response.json())
+    # Print the AI's response
+    # print(response.json()) # replace with print(response.json()["choices"][0]['message']['content']) for just the content
+    return(response.json()["choices"][0]['message']['content'])
+
+
 def get_newsapi_analysis(company_name: str):
     base_url = "https://newsapi.org/v2/everything"
 
     to_date = datetime.now()
-    from_date = to_date - timedelta(days=7)
+    from_date = to_date - timedelta(days=2)
 
     params = {
         'q': company_name,
@@ -59,6 +86,7 @@ def alpha_vant_analysis(company_name: str):
     return data
 
 def get_competitors(questions, answers):
+    print(os.environ.get('OPENAI_API_KEY'))
     messages = [
         {
             "role": "system",
@@ -67,6 +95,7 @@ def get_competitors(questions, answers):
                         BELOW GIVEN FORMAT. 
                         
                         {{
+                            "current_company": "", # ticker for the current company 
                             "competitors": {{
                                 "domestic": [], # minimum three competitors level
                                 "international": [] # minimum three competitors that are international levels
@@ -103,12 +132,12 @@ def get_competitors(questions, answers):
         }
     ]
     response = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4o-mini",
             messages=messages,
             max_tokens=1000,
             temperature=0.3
         )
-        
+    print(response, ' was i hre')
     try:
         result_text = response.choices[0].message.content.strip()
         print(result_text)

@@ -98,36 +98,25 @@ class SWOTNewsAnalyzer:
             return None
         
         articles = news_data.get('articles', [])
-        print(f"Found {len(articles)} articles")
         
         # Categorize articles
-        swot_analysis = {
-            'strengths': [],
-            'weaknesses': [],
-            'opportunities': [],
-            'threats': [],
-            'neutral': []
-        }
+        analysis = []
         
         for article in articles:
             title = article.get('title', '')
             description = article.get('description', '') or ''
             
-            category = self.categorize_article(title, description)
-            sentiment = self.analyze_sentiment_keywords(f"{title} {description}")
-            
             article_summary = {
                 'title': title,
-                'description': description[:200] + "..." if len(description) > 200 else description,
+                'description': description[:600] + "..." if len(description) > 200 else description,
                 'url': article.get('url', ''),
                 'published_at': article.get('publishedAt', ''),
-                'sentiment': sentiment,
                 'source': article.get('source', {}).get('name', 'Unknown')
             }
             
-            swot_analysis[category].append(article_summary)
+            analysis.append(article_summary)
         
-        return swot_analysis
+        return analysis
     
     def generate_swot_report(self, swot_analysis, company_name):
         """Generate formatted SWOT analysis report as text string"""

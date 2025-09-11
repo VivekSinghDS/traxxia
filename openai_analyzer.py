@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 from swot_analysis import SWOTNewsAnalyzer
 from dotenv import load_dotenv
-from helpers import DocumentProcessor, fetch_top_articles, perform_web_search, process_file_and_questions
+from helpers import DocumentProcessor, fetch_top_articles, perform_web_search, process_file_and_questions, perplexity_analysis
 from constants import * 
 from schemas import *
 from dotenv import load_dotenv
@@ -123,20 +123,17 @@ async def competitor_finding(request: AnalyzeAllRequest):
             competitor = competitor.strip() 
             swot_data = analyzer.generate_swot_analysis(competitor, days_back=1)
             if swot_data:
-                # print(type(swot_data))
                 for type_ in swot_data:
                     for list_ in (swot_data[type_]):
                         references['source'].append(list_['source'])
                     break
-                #     references['source'].append(type_)
-                # competitor_swot_data[competitor] = swot_data
         prompt_ = prompt_for_swot_analysis.format(competitors=competitors, swot_data=competitor_swot_data, questions=request.questions, answers=request.answers)
         # print(prompt_)
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": system_prompt_for_swot_analysis},
-                {"role": "user", "content": prompt_ + "Provide me the details about the company whose questions and answers are provided and its swot analysis"}
+                {"role": "user", "content": prompt_ }
             ],
             temperature=0,
             max_tokens=500
@@ -367,38 +364,156 @@ async def full_swot_portfolio(request_: FullSwotPortfolioRequest, request: Reque
     Create comprehensive SWOT portfolio analysis from all questions and answers.
     Returns detailed SWOT analysis with strategic implications and recommendations.
     """
+    # try:
+    prompt_ = prompt_for_full_swot_portfolio.format(questions=request_.questions, answers=request_.answers)
+    payload = [
+            {"role": "system", "content": system_prompt_for_full_swot_portfolio},
+            {"role": "user", "content": prompt_}
+        ]
+    if request.headers.get('deep_search'):
+        web_data = perform_web_search(request_.questions, request_.answers)
+        payload += [{"role": "user", "content": f"Here are some of the competitors of this company on global and domestic scale. Use this as a context, to help interpret the baseline of the current company:  \n {web_data}"}]        
+    
+    # sample_data = {
+    #     "profit_pool_insights": [
+    #         {
+    #         "insight_title": "Microsoft's Dominance in High-Margin Software Segments",
+    #         "key_finding": "Microsoft's core software businesses (Windows, Office, Azure) generate outsized profit relative to their revenue share due to industry-leading operating margins of 44.9% and profit margin of 36.1%.",
+    #         "data_points": [
+    #             "RevenueTTM: $281.7B",
+    #             "GrossProfitTTM: $193.9B (68.8% gross margin)",
+    #             "OperatingMarginTTM: 44.9%",
+    #             "ProfitMargin: 36.1%",
+    #             "EBITDA: $156.5B"
+    #         ],
+    #         "strategic_implication": "Continued investment in core platforms and cloud infrastructure will sustain profit pool advantages; future margin expansion relies on deepening enterprise SaaS penetration and maintaining pricing power.",
+    #         "visual_priority": "high"
+    #         },
+    #         {
+    #         "insight_title": "Profit Pool Shift Toward Cloud and Infrastructure",
+    #         "key_finding": "Azure and infrastructure services account for a growing share of profit pool, driven by compounded quarterly growth (+18.1% YoY revenue growth in latest quarter) and high margins compared to traditional software.",
+    #         "data_points": [
+    #             "Azure Revenue Growth: +18.1% YoY",
+    #             "Cloud Segment Gross Margin: ~70+%",
+    #             "Cloud Industry Operating Margin Benchmark: 28-38%",
+    #             "MarketCapitalization: $3.76T"
+    #         ],
+    #         "strategic_implication": "Strategic focus on cloud expansion and hybrid solutions is vital to capturing incremental profits as software licensing growth slows.",
+    #         "visual_priority": "high"
+    #         },
+    #         {
+    #         "insight_title": "Labor Costs as Major Investment in Value Creation",
+    #         "key_finding": "Microsoft's 35 employees (example answer context) represent 65% of costs, highlighting talent as a pivotal expense and value driver, especially for innovation and support.",
+    #         "data_points": [
+    #             "Employee costs: 65% of total costs",
+    #             "Operating margins depend on efficiency of product development and support capacity"
+    #         ],
+    #         "strategic_implication": "Investment in recruiting and retaining top talent—especially in AI, security, and enterprise support—will directly impact profitability and innovative capability.",
+    #         "visual_priority": "medium"
+    #         }
+    #     ],
+    #     "market_map_insights": [
+    #         {
+    #         "insight_title": "Microsoft’s Competitive Position as Enterprise Software Leader",
+    #         "key_finding": "Microsoft is differentiated by its strong enterprise focus, multi-channel distribution, and platform flexibility, with large market share in OS, cloud, and productivity software.",
+    #         "market_dynamics": "Industry is consolidating around digital infrastructure, cloud, and cybersecurity. Regulatory shifts (data privacy, AI governance) and high automation demand are reshaping product strategies.",
+    #         "competitive_positioning": "Top quadrant for market share and profitability; maintains premium pricing power and customer loyalty through support and integration.",
+    #         "opportunity_areas": [
+    #             "Accelerate AI/ML adoption for enterprise clients",
+    #             "Expand cybersecurity offerings in response to growing threat",
+    #             "Capture SME and mid-market SaaS demand through tailored products"
+    #         ]
+    #         },
+    #         {
+    #         "insight_title": "Emerging Market Growth Drivers: Cloud and AI",
+    #         "key_finding": "Cloud and AI integration are at the steep part of the technology adoption curve, providing significant TAM expansion and above-market growth rates.",
+    #         "market_dynamics": "TAM: $45.6B (2024), 12% CAGR. Cloud segment growth at 25%, software licensing at 5%. New entrants and substitutes (open source, SaaS startups) intensify competition.",
+    #         "competitive_positioning": "Microsoft’s platform scale and integration capabilities give it an edge against both incumbents and disruptors.",
+    #         "opportunity_areas": [
+    #             "AI-powered business process automation",
+    #             "Cloud migration consulting/services",
+    #             "Partnerships with vertical SaaS providers"
+    #         ]
+    #         }
+    #     ],
+    #     "combined_strategic_insights": [
+    #         {
+    #         "insight_title": "Maintaining Margin Leadership in Rapidly Evolving Markets",
+    #         "profit_opportunity": "Focus resources on high-growth, high-margin segments (cloud, AI-enabled infrastructure, enterprise SaaS).",
+    #         "market_position_required": "Sustain innovation and integration to strengthen Microsoft’s position as ‘platform of choice’ for enterprises.",
+    #         "investment_recommendation": "Prioritize R&D investments in AI/cloud, expand global support, and reinforce talent acquisition.",
+    #         "risk_factors": [
+    #             "Data privacy and cybersecurity threats",
+    #             "Regulatory changes in US/EU markets",
+    #             "Disruption from open-source and agile SaaS competitors"
+    #         ]
+    #         },
+    #         {
+    #         "insight_title": "Customer Experience as a Strategic Differentiator",
+    #         "profit_opportunity": "Leverage superior customer support and flexible platform integration to enhance retention and cross-sell opportunities.",
+    #         "market_position_required": "Deliver consistent high NPS (current: 45) and maintain premium service levels.",
+    #         "investment_recommendation": "Scale support resources; invest in onboarding and self-service analytics for SME clients.",
+    #         "risk_factors": [
+    #             "Customer churn if onboarding delays persist",
+    #             "Insufficient marketing vs. agile rivals"
+    #         ]
+    #         }
+    #     ],
+    #     "visual_recommendations": [
+    #         {
+    #         "chart_type": "Stacked Bar Chart",
+    #         "data_to_display": "Revenue and operating margin for each business segment (Windows, Office, Azure, Gaming)",
+    #         "key_message": "Microsoft’s profit pools are concentrated in core software and cloud segments, with clear margin differentials."
+    #         },
+    #         {
+    #         "chart_type": "Bubble Chart",
+    #         "data_to_display": "Market share (x), segment growth rate (y), and profitability (color) for major players including Microsoft, Amazon, Google, Salesforce.",
+    #         "key_message": "Microsoft occupies the premium position—high share, high growth, and top-tier profitability in cloud and software."
+    #         },
+    #         {
+    #         "chart_type": "Waterfall Chart",
+    #         "data_to_display": "Flow of profit from gross revenue to net income across segments",
+    #         "key_message": "Visualizes how each step—COGS, operating expenses, tax—affects profit retention by segment."
+    #         },
+    #         {
+    #         "chart_type": "Tornado Chart",
+    #         "data_to_display": "Sensitivity analysis of profit drivers (pricing, labor costs, R&D investment, customer churn rate)",
+    #         "key_message": "Identifies which levers have the most impact on Microsoft’s profit pools and strategic flexibility."
+    #         },
+    #         {
+    #         "chart_type": "Competitive Positioning Matrix",
+    #         "data_to_display": "Profitability vs. market position, mapped for key competitors",
+    #         "key_message": "Microsoft leads the quadrant for both share and margin—benchmarking highlights risk areas and differentiation."
+    #         }
+    #     ]
+    #     }
+    
+    # import json 
+    # payload += [{"role": "user", "content": "here is some insights :" + json.dumps(sample_data, indent=2)}]
+    print(payload)
+    return perplexity_analysis(system_prompt=system_prompt_for_full_swot_portfolio, user_prompt = payload[1]['content'])
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=payload ,# INCOMPLETE_QA_PAYLOAD,
+        temperature=0.3,
+        max_tokens=1000
+    )
+    result_text = response.choices[0].message.content.strip()
+    
+    # Try to parse the JSON response
+    import json
     try:
-        prompt_ = prompt_for_full_swot_portfolio.format(questions=request_.questions, answers=request_.answers)
-        payload = [
-                {"role": "system", "content": system_prompt_for_full_swot_portfolio},
-                {"role": "user", "content": prompt_}
-            ]
-        if request.headers.get('deep_search'):
-            web_data = perform_web_search(request_.questions, request_.answers)
-            payload += [{"role": "user", "content": f"Here are some of the competitors of this company on global and domestic scale. Use this as a context, to help interpret the baseline of the current company:  \n {web_data}"}]        
-            
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=payload ,# INCOMPLETE_QA_PAYLOAD,
-            temperature=0.3,
-            max_tokens=1000
+        result = json.loads(result_text)
+        return result
+    except json.JSONDecodeError:
+        # Fallback if JSON parsing fails
+        raise HTTPException(
+            status_code=500, 
+            detail="Error parsing SWOT portfolio response. Please try again."
         )
-        result_text = response.choices[0].message.content.strip()
         
-        # Try to parse the JSON response
-        import json
-        try:
-            result = json.loads(result_text)
-            return result
-        except json.JSONDecodeError:
-            # Fallback if JSON parsing fails
-            raise HTTPException(
-                status_code=500, 
-                detail="Error parsing SWOT portfolio response. Please try again."
-            )
-            
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error analyzing SWOT portfolio: {str(e)}")
+    # except Exception as e:
+    #     raise HTTPException(status_code=500, detail=f"Error analyzing SWOT portfolio: {str(e)}")
 
 @app.post("/full-swot-portfolio-with-file")
 async def full_swot_portfolio_with_file(
