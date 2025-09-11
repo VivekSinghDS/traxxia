@@ -370,10 +370,10 @@ async def full_swot_portfolio(request_: FullSwotPortfolioRequest, request: Reque
             {"role": "system", "content": system_prompt_for_full_swot_portfolio},
             {"role": "user", "content": prompt_}
         ]
-    if request.headers.get('deep_search'):
-        web_data = perform_web_search(request_.questions, request_.answers)
+    # if request.headers.get('deep_search'):
+    #     web_data = perform_web_search(request_.questions, request_.answers)
         
-        payload += [{"role": "user", "content": f"Here are some of the competitors of this company on global and domestic scale. Use this as a context, to help interpret the baseline of the current company:  \n {web_data}"}]        
+    #     payload += [{"role": "user", "content": f"Here are some of the competitors of this company on global and domestic scale. Use this as a context, to help interpret the baseline of the current company:  \n {web_data}"}]        
     
     # sample_data = {
     #     "profit_pool_insights": [
