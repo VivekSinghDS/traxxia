@@ -29,7 +29,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 import requests
 
-def perplexity_analysis(system_prompt, user_prompt):
+def perplexity_analysis(system_prompt, user_prompt, citations_required = False):
 # Set up the API endpoint and headers
     url = "https://api.perplexity.ai/chat/completions"
     headers = {
@@ -51,6 +51,8 @@ def perplexity_analysis(system_prompt, user_prompt):
     # print(response.json())
     # Print the AI's response
     # print(response.json()) # replace with print(response.json()["choices"][0]['message']['content']) for just the content
+    if citations_required:
+        return (response.json()["choices"][0]['message']['content'],response.json()['citations'])
     return(response.json()["choices"][0]['message']['content'])
 
 

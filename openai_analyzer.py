@@ -494,9 +494,10 @@ async def full_swot_portfolio(request_: FullSwotPortfolioRequest, request: Reque
     # import json 
     # payload += [{"role": "user", "content": "here is some insights :" + json.dumps(sample_data, indent=2)}]
     print(payload)
-    result = perplexity_analysis(system_prompt=system_prompt_for_full_swot_portfolio, user_prompt = payload[1]['content'])
+    content, citations = perplexity_analysis(system_prompt=system_prompt_for_full_swot_portfolio, user_prompt = payload[1]['content'], citations_required=True)
     import json 
-    result = dict(json.loads(result))
+    result = dict(json.loads(content))
+    result['citations'] = citations
     return result
     
 
