@@ -20,6 +20,7 @@ from dotenv import load_dotenv
 from constants import * 
 import requests
 from datetime import datetime, timedelta
+import asyncio 
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -47,7 +48,7 @@ def perplexity_analysis(system_prompt, user_prompt):
 
     # Make the API call
     response = requests.post(url, headers=headers, json=payload)
-    print(response.json())
+    # print(response.json())
     # Print the AI's response
     # print(response.json()) # replace with print(response.json()["choices"][0]['message']['content']) for just the content
     return(response.json()["choices"][0]['message']['content'])
@@ -1153,7 +1154,61 @@ def merge_json_values(existing_json, new_json):
     
     merge_recursive(merged, new_json)
     return merged
-  
+
+async def external_company_intelligence(results): 
+    print('bansow')
+    print(results)
+    return perplexity_analysis(system_prompt = system_prompt_for_consolidated_intelligence, user_prompt = user_prompt_for_consolidated_intelligence.format(
+        query2_response = results['political_analysis'],
+        query3_response = results['economic_analysis'],
+        query4_response = results['social_analysis'],
+        query5_response = results['technological_analysis'],
+        query6_response = results['environmental_analysis'],
+        query7_response = results['legal_analysis'],
+    )) 
+
+async def political_intelligence_async(company_name):
+    return perplexity_analysis(system_prompt = system_prompt_for_political_analysis, user_prompt = common_prompt_for_micro_pestel.format(company_name = company_name)) 
+
+async def economic_intelligence_async(company_name):
+    return perplexity_analysis(system_prompt = system_prompt_for_economic_analysis, user_prompt = common_prompt_for_micro_pestel.format(company_name = company_name))  
+
+async def social_intelligence_async(company_name):
+    return perplexity_analysis(system_prompt = system_prompt_for_social_intelligence, user_prompt = common_prompt_for_micro_pestel.format(company_name = company_name))  
+
+async def technological_intelligence_async(company_name):
+    return perplexity_analysis(system_prompt = system_prompt_for_technological_intelligence, user_prompt = common_prompt_for_micro_pestel.format(company_name = company_name))  
+
+async def environmental_intelligence_async(company_name):
+    return perplexity_analysis(system_prompt = system_prompt_for_environmental_intelligence, user_prompt = common_prompt_for_micro_pestel.format(company_name = company_name))  
+
+async def legal_intelligence_async(company_name):
+    return perplexity_analysis(system_prompt = system_prompt_for_legal_intelligence, user_prompt = common_prompt_for_micro_pestel.format(company_name = company_name))  
+
+async def analyze_company_async(company_name):
+    # Assuming you have async versions of your functions
+    tasks = [
+        political_intelligence_async(company_name),
+        economic_intelligence_async(company_name),
+        social_intelligence_async(company_name),
+        technological_intelligence_async(company_name),
+        environmental_intelligence_async(company_name),
+        legal_intelligence_async(company_name)
+    ]
+    
+    results = await asyncio.gather(*tasks)
+    
+    return {
+        'political_analysis': results[0],
+        'economic_analysis': results[1],
+        'social_analysis': results[2],
+        'technological_analysis': results[3],
+        'environmental_analysis': results[4],
+        'legal_analysis': results[5]
+    }
+
+# Usage
+
   
 def process_file_and_questions(file: UploadFile, questions : Optional[List[str]], answers: Optional[List[str]], reference: dict):
     total_pages = 0

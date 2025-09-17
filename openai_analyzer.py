@@ -8,12 +8,14 @@ from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 from swot_analysis import SWOTNewsAnalyzer
 from dotenv import load_dotenv
-from helpers import DocumentProcessor, fetch_top_articles, perform_web_search, process_file_and_questions, perplexity_analysis
+from helpers import DocumentProcessor, analyze_company_async, external_company_intelligence, fetch_top_articles, perform_web_search, process_file_and_questions, perplexity_analysis
 from constants import * 
 from schemas import *
 from dotenv import load_dotenv
 from excel_analyze.medium import MediumAnalysis
 from excel_analyze.simple import SimpleFinancialAnalysisAdapter
+import asyncio 
+
 load_dotenv()
 
 
@@ -1585,38 +1587,27 @@ async def pestel_analysis(request_: PestelAnalysisRequest, request: Request):
     Returns detailed PESTEL analysis with strategic implications and monitoring framework.
     """
     # try:
-    prompt_ = prompt_for_pestel_analysis.format(questions=request_.questions, answers=request_.answers)
+    company_results = await analyze_company_async("Kasnet")
+    consolidated_data = await external_company_intelligence(company_results)
+
     
-    payload = [
-            {"role": "system", "content": system_prompt_for_pestel_analysis},
-            {"role": "user", "content": prompt_},
-        ]
-    if request.headers.get('deep_search'):
-        web_data = (perform_web_search(request_.questions, request_.answers))
-        payload += [{"role": "user", "content": f"Here are some of the competitors of this company on global and domestic scale. Use this as a context, to help interpret the baseline of the current company:  \n {web_data}"}]        
-        
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=payload,
-        temperature=0.3,
-        max_tokens=1200
+    prompt = prompt_for_pestel_analysis.format(
+        questions = request_.questions, 
+        answers = request_.answers,
+        consolidated_financial_insights = consolidated_data, 
+        political_external_data = company_results['political_analysis'],
+        economic_external_data = company_results['economic_analysis'],
+        social_external_data = company_results['social_analysis'],
+        technological_external_data = company_results['technological_analysis'],
+        environmental_external_data = company_results['environmental_analysis'],
+        legal_external_data = company_results['legal_analysis']
     )
-    assistant_text = response.choices[0].message.content.strip()
-    # Try to parse the JSON response
-    import json
-    try:
-        result = json.loads(assistant_text)
-        return result
-    except json.JSONDecodeError as e:
-        print(e)
-        # Fallback if JSON parsing fails
-        raise HTTPException(
-            status_code=500, 
-            detail="Error parsing PESTEL analysis response. Please try again."
-        )
-            
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error analyzing PESTEL analysis: {str(e)}")
+    
+    result = perplexity_analysis(system_prompt=system_prompt_for_pestel_analysis, user_prompt = prompt)
+    import json 
+    result = dict(json.loads(result))
+    return result
+
 
 @app.post("/pestel-analysis-with-file")
 async def pestel_analysis_with_file(
