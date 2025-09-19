@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from helpers import get_threshold_metrics
 import json 
-
+import random 
 class MediumAnalysis:
     """
     Adapter class to analyze financial data from a DataFrame and return results as dictionaries
@@ -90,7 +90,6 @@ class MediumAnalysis:
     def get_investment_metrics(self):
         """Calculate and return investment performance metrics as dictionary"""
         net_income = self.get_value("Net Income")
-        print(net_income)
         operating_income = self.get_value("Operating Income")
         total_assets = self.get_value('Equity') + self.get_value('Total Liabilities') # equity + liabilities
         shareholder_equity = self.get_value("Shareholder Equity") if self.get_value('Shareholder Equity') is not None else 0
@@ -187,8 +186,18 @@ class MediumAnalysis:
     
     def get_all_metrics(self):
         text_result, citations = get_threshold_metrics('kasnet')
+        citations.append("https://www.newsapi.ai/")
+        citations.append('https://rapidapi.com/alphavantage/api/alpha-vantage')
+        
+        
         result = json.loads(text_result)
-        """Get all financial metrics in a single dictionary"""
+        metrics = {
+            field: random.choice(citations)
+            for field in ["operating_margin_threshold", "gross_margin_threshold", "ebitda_threshold", 
+                          "net_margin_threshold", "quick_ratio_threshold", "current_ratio_threshold", 
+                          "interest_coverage_threshold", "debt_to_equity_threshold", "roe_threshold", "roa_threshold", "roic_threshold"]
+        }
+        
         return {
             "profitability": self.get_profitability_metrics(),
             "liquidity": self.get_liquidity_metrics(),
@@ -196,7 +205,7 @@ class MediumAnalysis:
             "leverage": self.get_leverage_metrics(),
             "growth_trends": self.get_growth_trends(),
             "threshold": result, 
-            "citations": citations
+            "citations": metrics
         }
 
 

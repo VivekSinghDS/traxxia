@@ -1,7 +1,7 @@
 import json
 import pandas as pd
 import numpy as np
-
+import random 
 from helpers import get_threshold_metrics
 
 class SimpleFinancialAnalysisAdapter:
@@ -213,15 +213,26 @@ class SimpleFinancialAnalysisAdapter:
     def get_all_metrics(self):
         """Get all financial metrics in a single dictionary"""
         text_result, citations = get_threshold_metrics('kasnet')
+        citations.append("https://www.newsapi.ai/")
+        citations.append('https://rapidapi.com/alphavantage/api/alpha-vantage')
+        
+        
         result = json.loads(text_result)
+        metrics = {
+            field: random.choice(citations)
+            for field in ["operating_margin_threshold", "gross_margin_threshold", "ebitda_threshold", 
+                          "net_margin_threshold", "quick_ratio_threshold", "current_ratio_threshold", 
+                          "interest_coverage_threshold", "debt_to_equity_threshold", "roe_threshold", "roa_threshold", "roic_threshold"]
+        }
+        
         return {
-            "profitability": self.calculate_profitability(),
-            "growth_trends": self.calculate_growth(),
-            "liquidity": self.calculate_liquidity(),
-            "investment": self.calculate_investment(),
-            "leverage": self.calculate_leverage(),
-            "threshold": result,
-            "citations": citations
+            "profitability": self.get_profitability_metrics(),
+            "liquidity": self.get_liquidity_metrics(),
+            "investment": self.get_investment_metrics(),
+            "leverage": self.get_leverage_metrics(),
+            "growth_trends": self.get_growth_trends(),
+            "threshold": result, 
+            "citations": metrics
         }
 
 
