@@ -218,23 +218,40 @@ class SimpleFinancialAnalysisAdapter:
         
         
         result = json.loads(text_result)
-        metrics = {
+        profitability_citation = {
             field: random.choice(citations)
-            for field in ["operating_margin_threshold", "gross_margin_threshold", "ebitda_threshold", 
-                          "net_margin_threshold", "quick_ratio_threshold", "current_ratio_threshold", 
-                          "interest_coverage_threshold", "debt_to_equity_threshold", "roe_threshold", "roa_threshold", "roic_threshold"]
+            for field in ["operating_margin", "gross_margin", "ebitda", 
+                          "net_margin"]
+        }
+        liquidity_citation = {
+            field: random.choice(citations)
+            for field in ["quick_ratio", "current_ratio", "ebitda", 
+                          "net_margin"]
         }
         
-        return {
+        leverage_citation = {
+            field: random.choice(citations)
+            for field in ["interest_coverage", "debt_to_equity"]
+        }
+        
+        investment_citation = {
+            field: random.choice(citations)
+            for field in ["roe", "roa", "roic"]
+        }
+        result = {
             "profitability": self.get_profitability_metrics(),
             "liquidity": self.get_liquidity_metrics(),
             "investment": self.get_investment_metrics(),
             "leverage": self.get_leverage_metrics(),
             "growth_trends": self.get_growth_trends(),
             "threshold": result, 
-            "citations": metrics
         }
-
+        result['profitability']['citations'] = profitability_citation
+        result['liquidity']['citations'] = liquidity_citation
+        result['leverage']['citations'] = leverage_citation 
+        result['investment']['citations'] = investment_citation
+        return result 
+       
 
 # Example usage:
 if __name__ == "__main__":
