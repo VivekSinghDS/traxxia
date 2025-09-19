@@ -212,15 +212,16 @@ class SimpleFinancialAnalysisAdapter:
     
     def get_all_metrics(self):
         """Get all financial metrics in a single dictionary"""
-        result = get_threshold_metrics('kasnet')
-        result = json.loads(result)
+        text_result, citations = get_threshold_metrics('kasnet')
+        result = json.loads(text_result)
         return {
             "profitability": self.calculate_profitability(),
             "growth_trends": self.calculate_growth(),
             "liquidity": self.calculate_liquidity(),
             "investment": self.calculate_investment(),
             "leverage": self.calculate_leverage(),
-            "threshold": result
+            "threshold": result,
+            "citations": citations
         }
 
 

@@ -51,8 +51,11 @@ def perplexity_analysis(system_prompt, user_prompt, citations_required = False):
     # print(response.json())
     # Print the AI's response
     # print(response.json()) # replace with print(response.json()["choices"][0]['message']['content']) for just the content
+    
     if citations_required:
-        return (response.json()["choices"][0]['message']['content'],response.json()['citations'])
+        citations = response.json()['citations']
+        citations = [x for x in citations if not any(y in x for y in ['openai', 'github', 'langchain', 'source-is-not-valid-json', 'build5nines', 'jsonlint'])]
+        return (response.json()["choices"][0]['message']['content'],citations)
     return(response.json()["choices"][0]['message']['content'])
 
 
@@ -170,11 +173,8 @@ import requests
 import trafilatura
 
 def get_threshold_metrics(company_name):
-    response = client.chat.completions.create(
-            model="gpt-4.1",
-            messages=[
-                {"role": "system", "content": """ 
-                        YOU WILL BE GIVEN A COMPANY'S RESULT AND ITS PERFORMANCE AS TO HOW IT IS DOING. YOUR TASK IS TO 
+    system_prompt = '''
+     YOU WILL BE GIVEN A COMPANY'S RESULT AND ITS PERFORMANCE AS TO HOW IT IS DOING. YOUR TASK IS TO 
                         UNDERSTAND THEIR BUSINESS FORMAT, AND GIVE ME THE AVERAGE NUMBERS FROM THE MARKET FOR THE FOLLOWING 
                         SEGMENT OF THE COMPANY. ONCE YOU ANALYZE THE COMPANY NAME, AND ITS SEGMENT, I WANT THE ANSWER IN THE 
                         JSON FORMAT AS GIVEN BELOW. THIS IS VERY STRICT, AS I WILL PARSE IT IN THE FRONTEND, HENCE THE 
@@ -193,15 +193,15 @@ def get_threshold_metrics(company_name):
                             "roa": "", # a single value that represents ideal roa of similar companies
                             "roic": "" # # a single value that represents ideal roic of similar companies
                         }}
-                                        """},
-                {"role": "user", "content": f"Here is the company nae : {company_name}"},
-                {"role": "user", "content": "ALWAYS ALWAYS PROVIDE VALID JSON WITH NO ``` OR ANY CHARACTERS, JUST THE VALID JSON AND NOTHING ELSE."}
-            ],
-            temperature=0.3,
-            
-        )
-    return response.choices[0].message.content
+    '''
     
+    user_prompt = f'''
+        Here is the company nae : {company_name}
+        ALWAYS ALWAYS PROVIDE VALID JSON WITH NO ``` OR ANY CHARACTERS, JUST THE VALID JSON AND NOTHING ELSE.
+    '''
+    
+    text, citations = perplexity_analysis(system_prompt = system_prompt, user_prompt = user_prompt, citations_required=True)
+    return (text, citations)
 
 def fetch_top_articles(keyword, num_articles=3):
     """

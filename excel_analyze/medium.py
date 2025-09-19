@@ -186,8 +186,8 @@ class MediumAnalysis:
         }
     
     def get_all_metrics(self):
-        result = get_threshold_metrics('kasnet')
-        result = json.loads(result)
+        text_result, citations = get_threshold_metrics('kasnet')
+        result = json.loads(text_result)
         """Get all financial metrics in a single dictionary"""
         return {
             "profitability": self.get_profitability_metrics(),
@@ -195,7 +195,8 @@ class MediumAnalysis:
             "investment": self.get_investment_metrics(),
             "leverage": self.get_leverage_metrics(),
             "growth_trends": self.get_growth_trends(),
-            "threshold": result
+            "threshold": result, 
+            "citations": citations
         }
 
 
