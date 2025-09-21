@@ -1599,28 +1599,116 @@ async def get_financial_performance(request: Request,
     result = (process_file_and_questions(file, questions, answers, reference = PHASE_3['FINANCIAL_PERFORMANCE']))
     return result
 
-@app.post("/excel-analysis")
+@app.post('/excel-analysis')
 async def excel_analysis(
     request: Request,
     file: Optional[UploadFile] = File(None),
-    source: str = Header(default="simple"),
+    source: str = Header(default='simple'),
+    metric_type: Optional[str] = None
 ):
     if file is None:
         return {"error": "No file uploaded"}
-
+    
     contents = await file.read()
-
+    
+    # Load Excel file into a pandas DataFrame
     try:
         df = pd.read_excel(BytesIO(contents))
     except Exception as e:
         return {"error": f"Error loading Excel file: {str(e)}"}
+    
+    available_metrics = [
+        'profitability', 
+        'liquidity', 
+        'investment', 
+        'leverage', 
+        'growth_trends'
+    ]
+     
+    if source not in ['medium', 'simple']:
+        return {"error": "Invalid source. Must be 'simple' or 'medium'"}
+     
+    if source == 'medium':
+        analysis_obj = MediumAnalysis(df)
+    else:  
+        analysis_obj = SimpleFinancialAnalysisAdapter(df)
+     
+    try:
+        analysis = analysis_obj.get_all_metrics()
+    except Exception as e:
+        return {"error": f"Error during analysis: {str(e)}"}
+     
+    if metric_type:
+        if metric_type not in available_metrics:
+            return {
+                "error": f"Invalid metric_type. Available options: {', '.join(available_metrics)}"
+            }
+        
+        if metric_type not in analysis:
+            return {"error": f"Metric type '{metric_type}' not found in analysis results"}
+         
+        result = {metric_type: analysis[metric_type]} 
 
-    # Choose analysis class dynamically
-    AnalysisClass = MediumAnalysis if source == "medium" else SimpleFinancialAnalysisAdapter
-    analysis = AnalysisClass(df).get_all_metrics()
-
-    # Merge thresholds into result
-    return merge_thresholds(analysis)
+        threshold_data = analysis.get('threshold', {})
+        if metric_type == 'profitability':
+            result[metric_type].update({
+                'operating_margin_threshold': threshold_data.get('operating_margin'),
+                'net_margin_threshold': threshold_data.get('net_margin'),
+                'gross_margin_threshold': threshold_data.get('gross_margin'),
+                'ebitda_threshold': threshold_data.get('ebitda')
+            })
+        elif metric_type == 'liquidity':
+            result[metric_type].update({
+                'quick_ratio_threshold': threshold_data.get('quick_ratio'),
+                'current_ratio_threshold': threshold_data.get('current_ratio')
+            })
+        elif metric_type == 'leverage':
+            result[metric_type].update({
+                'interest_coverage_threshold': threshold_data.get('interest_coverage'),
+                'debt_to_equity_threshold': threshold_data.get('debt_to_equity')
+            })
+        elif metric_type == 'investment':
+            result[metric_type].update({
+                'roe_threshold': threshold_data.get('roe'),
+                'roa_threshold': threshold_data.get('roa'),
+                'roic_threshold': threshold_data.get('roic')
+            })
+        
+        return result
+     
+    result = analysis.copy()
+    result.pop('threshold', None)  
+     
+    threshold_data = analysis.get('threshold', {})
+     
+    if 'profitability' in result:
+        result['profitability'].update({
+            'operating_margin_threshold': threshold_data.get('operating_margin'),
+            'net_margin_threshold': threshold_data.get('net_margin'),
+            'gross_margin_threshold': threshold_data.get('gross_margin'),
+            'ebitda_threshold': threshold_data.get('ebitda')
+        })
+     
+    if 'liquidity' in result:
+        result['liquidity'].update({
+            'quick_ratio_threshold': threshold_data.get('quick_ratio'),
+            'current_ratio_threshold': threshold_data.get('current_ratio')
+        })
+     
+    if 'leverage' in result:
+        result['leverage'].update({
+            'interest_coverage_threshold': threshold_data.get('interest_coverage'),
+            'debt_to_equity_threshold': threshold_data.get('debt_to_equity')
+        })
+     
+    if 'investment' in result:
+        result['investment'].update({
+            'roe_threshold': threshold_data.get('roe'),
+            'roa_threshold': threshold_data.get('roa'),
+            'roic_threshold': threshold_data.get('roic')
+        })
+    
+    return result
 
 if __name__ == "__main__":
     import uvicorn
