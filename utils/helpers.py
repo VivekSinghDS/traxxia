@@ -1,6 +1,5 @@
-from collections import defaultdict
 from copy import deepcopy
-import fitz  # PyMuPDF
+import fitz 
 import pandas as pd
 import base64
 import io
@@ -15,12 +14,13 @@ from openai import OpenAI
 import cv2
 import numpy as np
 from openai import OpenAI
-# Configure logging
 from dotenv import load_dotenv
-from constants import * 
+from utils.constants import * 
 import requests
 from datetime import datetime, timedelta
-import asyncio 
+import asyncio
+import httpx
+from utils.prompts import pestel, porter 
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -29,15 +29,36 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 import requests
 
+def merge_thresholds(analysis: dict) -> dict:
+    """
+    Merge threshold values into the corresponding metric groups
+    and return the cleaned result dictionary.
+    """
+    result = analysis.copy()
+    thresholds = result.pop('threshold', {})
+
+    threshold_mapping = {
+        'profitability': ['operating_margin', 'gross_margin', 'ebitda', 'net_margin'],
+        'liquidity': ['quick_ratio', 'current_ratio'],
+        'leverage': ['interest_coverage', 'debt_to_equity'],
+        'investment': ['roe', 'roa', 'roic'],
+    }
+
+    for section, keys in threshold_mapping.items():
+        for key in keys:
+            if key in thresholds:
+                result[section][f"{key}_threshold"] = thresholds[key]
+
+    return result
+
 def perplexity_analysis(system_prompt, user_prompt, citations_required = False):
 # Set up the API endpoint and headers
     url = "https://api.perplexity.ai/chat/completions"
     headers = {
-        "Authorization": "Bearer "+os.environ.get("PERPLEXITY_KEY"),  # Replace with your actual API key
+        "Authorization": "Bearer "+str(os.environ.get("PERPLEXITY_KEY")),  # Replace with your actual API key
         "Content-Type": "application/json"
     }
 
-    # Define the request payload
     payload = {
         "model": "sonar-pro",
         "messages": [
@@ -46,18 +67,48 @@ def perplexity_analysis(system_prompt, user_prompt, citations_required = False):
         ]
     }
 
-    # Make the API call
     response = requests.post(url, headers=headers, json=payload)
-    # print(response.json())
-    # Print the AI's response
-    # print(response.json()) # replace with print(response.json()["choices"][0]['message']['content']) for just the content
-    
+
     if citations_required:
         citations = response.json()['citations']
         citations = [x for x in citations if not any(y in x for y in ['openai', 'github', 'langchain', 'source-is-not-valid-json', 'build5nines', 'jsonlint'])]
         return (response.json()["choices"][0]['message']['content'],citations)
     return(response.json()["choices"][0]['message']['content'])
 
+
+async def perplexity_analysis_async(system_prompt, user_prompt, citations_required=False):
+    url = "https://api.perplexity.ai/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {os.environ.get('PERPLEXITY_KEY')}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "model": "sonar-pro",
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+    }
+
+    # Increase timeout (e.g. 60s)
+    timeout = httpx.Timeout(60.0, read=60.0, write=30.0, connect=30.0)
+
+    async with httpx.AsyncClient(timeout=timeout) as client:
+        response = await client.post(url, headers=headers, json=payload)
+        data = response.json()
+
+    if citations_required:
+        citations = [
+            x for x in data.get("citations", [])
+            if not any(y in x for y in [
+                'openai', 'github', 'langchain', 'source-is-not-valid-json',
+                'build5nines', 'jsonlint'
+            ])
+        ]
+        return data["choices"][0]['message']['content'], citations
+
+    return data["choices"][0]['message']['content']
 
 def get_newsapi_analysis(company_name: str):
     base_url = "https://newsapi.org/v2/everything"
@@ -85,7 +136,6 @@ def get_newsapi_analysis(company_name: str):
 
 def alpha_vant_analysis(company_name: str):
     API_KEY = os.environ.get('ALPHA_VANT_API_KEY')
-    # replace the "demo" apikey below with your own key from https://www.alphavantage.co/support/#api-key
     url = f'https://www.alphavantage.co/query?function=OVERVIEW&symbol={company_name}&apikey={API_KEY}'
     r = requests.get(url)
     data = r.json()
@@ -1158,9 +1208,7 @@ def merge_json_values(existing_json, new_json):
     return merged
 
 async def external_company_intelligence(results): 
-    print('bansow')
-    print(results)
-    return perplexity_analysis(system_prompt = system_prompt_for_consolidated_intelligence, user_prompt = user_prompt_for_consolidated_intelligence.format(
+    return perplexity_analysis(system_prompt = pestel.system_prompt_for_consolidated_intelligence, user_prompt = pestel.user_prompt_for_consolidated_intelligence.format(
         query2_response = results['political_analysis'],
         query3_response = results['economic_analysis'],
         query4_response = results['social_analysis'],
@@ -1170,22 +1218,23 @@ async def external_company_intelligence(results):
     )) 
 
 async def political_intelligence_async(company_name):
-    return perplexity_analysis(system_prompt = system_prompt_for_political_analysis, user_prompt = common_prompt_for_micro_pestel.format(company_name = company_name)) 
+    return perplexity_analysis(system_prompt = pestel.system_prompt_for_political_analysis, user_prompt = pestel.common_prompt_for_micro_pestel.format(company_name = company_name)) 
 
 async def economic_intelligence_async(company_name):
-    return perplexity_analysis(system_prompt = system_prompt_for_economic_analysis, user_prompt = common_prompt_for_micro_pestel.format(company_name = company_name))  
+    return perplexity_analysis(system_prompt = pestel.system_prompt_for_economic_analysis, user_prompt = pestel.common_prompt_for_micro_pestel.format(company_name = company_name))  
 
 async def social_intelligence_async(company_name):
-    return perplexity_analysis(system_prompt = system_prompt_for_social_intelligence, user_prompt = common_prompt_for_micro_pestel.format(company_name = company_name))  
+    return perplexity_analysis(system_prompt = pestel.system_prompt_for_social_intelligence, user_prompt = pestel.common_prompt_for_micro_pestel.format(company_name = company_name))  
 
 async def technological_intelligence_async(company_name):
-    return perplexity_analysis(system_prompt = system_prompt_for_technological_intelligence, user_prompt = common_prompt_for_micro_pestel.format(company_name = company_name))  
+    return perplexity_analysis(system_prompt = pestel.system_prompt_for_technological_intelligence, user_prompt = pestel.common_prompt_for_micro_pestel.format(company_name = company_name))  
 
 async def environmental_intelligence_async(company_name):
-    return perplexity_analysis(system_prompt = system_prompt_for_environmental_intelligence, user_prompt = common_prompt_for_micro_pestel.format(company_name = company_name))  
+    return perplexity_analysis(system_prompt = pestel.system_prompt_for_environmental_intelligence, user_prompt = pestel.common_prompt_for_micro_pestel.format(company_name = company_name))  
 
 async def legal_intelligence_async(company_name):
-    return perplexity_analysis(system_prompt = system_prompt_for_legal_intelligence, user_prompt = common_prompt_for_micro_pestel.format(company_name = company_name))  
+    return perplexity_analysis(system_prompt = pestel.system_prompt_for_legal_intelligence, user_prompt = pestel.common_prompt_for_micro_pestel.format(company_name = company_name))  
+
 
 async def analyze_company_async(company_name):
     # Assuming you have async versions of your functions
@@ -1207,6 +1256,38 @@ async def analyze_company_async(company_name):
         'technological_analysis': results[3],
         'environmental_analysis': results[4],
         'legal_analysis': results[5]
+    }
+    
+async def get_company_details(questions, answers):
+    # Assuming you have async versions of your functions
+    tasks = [
+        perplexity_analysis_async(
+            system_prompt = porter.company_and_industry_overview, 
+            user_prompt=porter.common_question.format(
+                questions = questions, 
+                answers = answers
+            )),
+        
+        perplexity_analysis_async(
+            system_prompt = porter.company_entry_exit_dynamics, 
+            user_prompt=porter.common_question.format(
+                questions = questions, 
+                answers = answers
+            )),
+        
+        perplexity_analysis_async(
+            system_prompt = porter.substitute_and_competitiveness, 
+            user_prompt=porter.common_question.format(
+                questions = questions, 
+                answers = answers
+            ))
+    ]
+    
+    results = await asyncio.gather(*tasks)
+    return {
+        'company_overview': results[0],
+        'company_entry_exit_dynamic': results[1],
+        'substitute_and_competitiveness': results[2],
     }
 
 # Usage
@@ -1325,8 +1406,6 @@ def process_file_and_questions(file: UploadFile, questions : Optional[List[str]]
                         ]
                     }
                 ]
-        print('i came here')
-        print(reference)
         INCOMPLETE_QA_PAYLOAD = [{"role": "user", "content": "ADD `NOT ENOUGH DATA` TO THE VALUES IF YOU FEEL THE DATA IS NOT ENOUGH"}]
 
         messages[1]['content'].append(qa_payload)

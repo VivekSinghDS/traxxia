@@ -1,7 +1,7 @@
 from typing import Optional
 import pandas as pd
 import numpy as np
-from helpers import get_threshold_metrics
+from utils.helpers import get_threshold_metrics
 import json 
 import random 
 class MediumAnalysis:
