@@ -25,6 +25,7 @@ from utils.prompts import (
     pestel,
     porter,
     productivity_metrics,
+    simple_swot,
     single_qa_analysis,
     full_qa_analysis,
     competitor_find,
@@ -331,6 +332,25 @@ async def full_swot_portfolio(request_: FullSwotPortfolioRequest, request: Reque
     result['citations'] = citations
     return result
     
+@app.post("/simple-swot-portfolio")
+async def simple_swot_portfolio(request_: FullSwotPortfolioRequest, request: Request):
+    """
+    Create comprehensive SWOT portfolio analysis from all questions and answers.
+    Returns detailed SWOT analysis with strategic implications and recommendations.
+    """
+    # try:
+    competitor_information = perplexity_analysis(
+        system_prompt=simple_swot.competitor_system, 
+        user_prompt=simple_swot.user_prompt_competitor.format(questions = request_.questions, answers = request_.answers))
+    
+
+    content = perplexity_analysis(system_prompt=simple_swot.system, user_prompt = simple_swot.user.format(questions = request_.questions, 
+                                                                                                          answers = request_.answers,
+                                                                                                          competitors = competitor_information))
+    result = dict(json.loads(content))
+    return result
+    
+
 
 @app.post("/full-swot-portfolio-with-file")
 async def full_swot_portfolio_with_file(
