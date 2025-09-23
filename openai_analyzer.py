@@ -9,8 +9,8 @@ import pandas as pd
 from utils.swot_analysis import SWOTNewsAnalyzer
 from dotenv import load_dotenv
 from utils.helpers import (
-    DocumentProcessor, analyze_company_async, external_company_intelligence, get_company_details, 
-    merge_thresholds, perform_web_search, process_file_and_questions, perplexity_analysis
+    DocumentProcessor, analyze_company_async, external_company_intelligence, get_company_details, granular_strategic_analysis, 
+    merge_thresholds, micro_analysis_adjacency_matrix, perform_web_search, process_file_and_questions, perplexity_analysis
 )
 from utils.constants import * 
 from utils.schemas import *
@@ -1383,36 +1383,72 @@ async def pestel_analysis(request_: PestelAnalysisRequest):
     result = dict(json.loads(str(result)))
     return result
 
+
+@app.post("/core-adjacency-matrix")
+async def get_core_adjacency_matrix(request: StrategicAnalysisRequest):
+    ompany_details = await micro_analysis_adjacency_matrix(request.questions, request.answers)
+    consolidated_data = await external_company_intelligence(company_results)
+
+    
+    prompt = pestel.user.format(
+        questions = request.questions, 
+        answers = request.answers,
+        consolidated_financial_insights = consolidated_data, 
+        political_external_data = company_results['political_analysis'],
+        economic_external_data = company_results['economic_analysis'],
+        social_external_data = company_results['social_analysis'],
+        technological_external_data = company_results['technological_analysis'],
+        environmental_external_data = company_results['environmental_analysis'],
+        legal_external_data = company_results['legal_analysis']
+    )
+    
+    result = perplexity_analysis(system_prompt=pestel.system, user_prompt = prompt)
+    result = dict(json.loads(str(result)))
+    return result
+    pass 
+
 @app.post("/strategic-analysis")
 async def get_strategic_analysis(request_: StrategicAnalysisRequest, request: Request):
     """
     Create comprehensive strategic analysis using the STRATEGIC framework from questions and answers.
     Returns detailed strategic analysis with multi-dimensional assessment and implementation roadmap.
     """
+    # try:
+    analysis = await granular_strategic_analysis(questions = request_.questions, answers = request_.answers)
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": strategic_analysis.consolidated_system},
+            {"role": "user", "content": strategic_analysis.consolidated_user.format(
+                query_1_output = analysis['forward_looking_intelligence'],
+                query_2_output = analysis['risk_assessment'],
+                query_3_output = analysis['substitute_and_competitiveness']
+            )}
+        ],
+        temperature=0.3,
+        max_tokens=1000
+    )
+    consolidated_result = response.choices[0].message.content
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": strategic_analysis.system},
+            {"role": "user", "content": strategic_analysis.user.format(questions = request_.questions,
+                                                                       answers = request_.answers,
+                                                                       consolidated_results = consolidated_result)}
+        ],
+        temperature=0.3,
+        max_tokens=3800
+    )
     try:
-        payload = [
-                {"role": "system", "content": strategic_analysis.system},
-                {"role": "user", "content": strategic_analysis.user.format(questions=request_.questions, answers=request_.answers)},
-            ]
-        if request.headers.get('deep_search'):
-            web_data = (perform_web_search(request_.questions, request_.answers))
-            payload += [{"role": "user", "content": f"Here are some of the competitors of this company on global and domestic scale. Use this as a context, to help interpret the baseline of the current company:  \n {web_data}"}]        
-        payload += [{"role": "user", "content": "ALWAYS GIVE VALID JSON AND DON'T USE BACKTICKS LIKE ```. I NEED JUST THE JSON AND NOTHING ELSE"}]
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=payload,
-            temperature=0.3,
-            max_tokens=3700
-        )
-        stringified_json = str(response.choices[0].message.content).strip()
-        try:
-            result = json.loads(stringified_json)
-            return result
-        except json.JSONDecodeError:
-            return {}
+        print(str(response.choices[0].message.content))
+        result = json.loads(str(response.choices[0].message.content))
+        return result
+    except json.JSONDecodeError:
+        return {}
     
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error analyzing question-answer pair: {str(e)}")
+    # except Exception as e:
+    #     raise HTTPException(status_code=500, detail=f"Error analyzing question-answer pair: {str(e)}")
 
 
 @app.post("/strategic-analysis-with-file")

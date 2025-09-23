@@ -20,7 +20,7 @@ import requests
 from datetime import datetime, timedelta
 import asyncio
 import httpx
-from utils.prompts import pestel, porter 
+from utils.prompts import core_adjacency_matrix, pestel, porter, strategic_analysis 
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -52,6 +52,7 @@ def merge_thresholds(analysis: dict) -> dict:
     return result
 
 def perplexity_analysis(system_prompt, user_prompt, citations_required = False):
+    print(str(os.environ.get("PERPLEXITY_KEY")))
 # Set up the API endpoint and headers
     url = "https://api.perplexity.ai/chat/completions"
     headers = {
@@ -68,7 +69,7 @@ def perplexity_analysis(system_prompt, user_prompt, citations_required = False):
     }
 
     response = requests.post(url, headers=headers, json=payload)
-
+    print(response.content)
     if citations_required:
         citations = response.json()['citations']
         citations = [x for x in citations if not any(y in x for y in ['openai', 'github', 'langchain', 'source-is-not-valid-json', 'build5nines', 'jsonlint'])]
@@ -1288,6 +1289,70 @@ async def get_company_details(questions, answers):
         'company_overview': results[0],
         'company_entry_exit_dynamic': results[1],
         'substitute_and_competitiveness': results[2],
+    }
+    
+async def granular_strategic_analysis(questions, answers):
+    # Assuming you have async versions of your functions
+    tasks = [
+        perplexity_analysis_async(
+            system_prompt = strategic_analysis.forward_looking_intelligence_system, 
+            user_prompt=strategic_analysis.common_question.format(
+                questions = questions, 
+                answers = answers
+            )),
+        
+        perplexity_analysis_async(
+            system_prompt = strategic_analysis.risk_assessment, 
+            user_prompt=strategic_analysis.common_question.format(
+                questions = questions, 
+                answers = answers
+            )),
+        
+        perplexity_analysis_async(
+            system_prompt = strategic_analysis.market_intelligence_system, 
+            user_prompt=porter.common_question.format(
+                questions = questions, 
+                answers = answers
+            ))
+    ]
+    
+    results = await asyncio.gather(*tasks)
+    return {
+        'forward_looking_intelligence': results[0],
+        'risk_assessment': results[1],
+        'substitute_and_competitiveness': results[2],
+    }
+    
+async def micro_analysis_adjacency_matrix(questions, answers):
+    # Assuming you have async versions of your functions
+    tasks = [
+        perplexity_analysis_async(
+            system_prompt = core_adjacency_matrix.query1_system, 
+            user_prompt=porter.common_question.format(
+                questions = questions, 
+                answers = answers
+            )),
+        
+        perplexity_analysis_async(
+            system_prompt = core_adjacency_matrix.query2_system, 
+            user_prompt=porter.common_question.format(
+                questions = questions, 
+                answers = answers
+            )),
+        
+        perplexity_analysis_async(
+            system_prompt = core_adjacency_matrix.query3_system, 
+            user_prompt=porter.common_question.format(
+                questions = questions, 
+                answers = answers
+            ))
+    ]
+    
+    results = await asyncio.gather(*tasks)
+    return {
+        'company_overview': results[0],
+        'financial_insights': results[1],
+        'cagr_finance_data': results[2],
     }
 
 # Usage
