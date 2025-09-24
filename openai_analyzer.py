@@ -343,12 +343,26 @@ async def simple_swot_portfolio(request_: FullSwotPortfolioRequest, request: Req
         system_prompt=simple_swot.competitor_system, 
         user_prompt=simple_swot.user_prompt_competitor.format(questions = request_.questions, answers = request_.answers))
     
-
-    content = perplexity_analysis(system_prompt=simple_swot.system, user_prompt = simple_swot.user.format(questions = request_.questions, 
-                                                                                                          answers = request_.answers,
-                                                                                                          competitors = competitor_information))
-    result = dict(json.loads(content))
-    return result
+    response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": simple_swot.system},
+                {"role": "user", "content":simple_swot.user.format(questions = request_.questions, 
+                                                                    answers = request_.answers,
+                                                                    competitors = competitor_information)}
+            ],
+            temperature=0.3,
+            max_tokens=800
+        )
+    stringified_json = str(response.choices[0].message.content).strip()
+    try:
+        result = json.loads(stringified_json)
+        return result
+    except json.JSONDecodeError:
+        return {}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing question-answer pair: {str(e)}")
     
 
 
