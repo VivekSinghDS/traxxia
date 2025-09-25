@@ -574,6 +574,10 @@ Create strategic analysis and return it in the following JSON format:
             ]
         }},
         "key_improvements": [""], # an array of points they are Specific, Measurable, Achievable, Relevant, and Time-bound
+        "strategic_recommendations": [
+                "{{{{recommendation_1}}}}",
+                "{{{{recommendation_2}}}}"
+            ],
         "competitive_landscape": {{
             "direct_competitors": [
                 {{
