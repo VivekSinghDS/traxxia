@@ -18,6 +18,7 @@ from utils.prompts import (
     capability_heatmap,
     channel_effectiveness,
     competitive_advantage,
+    core_adjacency_matrix,
     culture_profile,
     expanded_capability_heatmap,
     maturity_score,
@@ -1400,26 +1401,23 @@ async def pestel_analysis(request_: PestelAnalysisRequest):
 
 @app.post("/core-adjacency-matrix")
 async def get_core_adjacency_matrix(request: StrategicAnalysisRequest):
-    ompany_details = await micro_analysis_adjacency_matrix(request.questions, request.answers)
-    consolidated_data = await external_company_intelligence(company_results)
-
-    
-    prompt = pestel.user.format(
-        questions = request.questions, 
-        answers = request.answers,
-        consolidated_financial_insights = consolidated_data, 
-        political_external_data = company_results['political_analysis'],
-        economic_external_data = company_results['economic_analysis'],
-        social_external_data = company_results['social_analysis'],
-        technological_external_data = company_results['technological_analysis'],
-        environmental_external_data = company_results['environmental_analysis'],
-        legal_external_data = company_results['legal_analysis']
-    )
-    
-    result = perplexity_analysis(system_prompt=pestel.system, user_prompt = prompt)
-    result = dict(json.loads(str(result)))
-    return result
-    pass 
+    response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": core_adjacency_matrix.system},
+                {"role": "user", "content":core_adjacency_matrix.user.format(questions = request.questions, 
+                                                                    answers = request.answers,
+                                                                    )}
+            ],
+            temperature=0.3,
+            max_tokens=800
+        )
+    stringified_json = str(response.choices[0].message.content).strip()
+    try:
+        result = json.loads(stringified_json)
+        return result
+    except json.JSONDecodeError:
+        return {}
 
 @app.post("/strategic-analysis")
 async def get_strategic_analysis(request_: StrategicAnalysisRequest, request: Request):
