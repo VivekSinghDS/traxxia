@@ -1452,14 +1452,16 @@ async def get_strategic_analysis(request_: StrategicAnalysisRequest, request: Re
         temperature=0.3,
         max_tokens=3800
     )
-    try:
-        print(str(response.choices[0].message.content))
-        result = json.loads(str(response.choices[0].message.content))
-        return result
-    except json.JSONDecodeError:
-        return {}
+    # try:
+    print(str(response.choices[0].message.content))
+    result = json.loads(str(response.choices[0].message.content))
+    return result
+    # except json.JSONDecodeError:
+    #     print(response.choices[0].message.content)
+    #     return {}
     
     # except Exception as e:
+    #     print(e)
     #     raise HTTPException(status_code=500, detail=f"Error analyzing question-answer pair: {str(e)}")
 
 

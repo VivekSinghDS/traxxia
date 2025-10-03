@@ -336,10 +336,6 @@ Create PESTEL analysis and return it in the following JSON format:
                 "{{{{opportunity_1}}}}",
                 "{{{{opportunity_2}}}}"
             ],
-            "strategic_recommendations": [
-                "{{{{recommendation_1}}}}",
-                "{{{{recommendation_2}}}}"
-            ],
             "agility_priority_score": "{{{{agility_score}}}}"  # Score (e.g., 1–10) representing how fast the org should adapt
         }},
         "factor_summary": {{
