@@ -6,11 +6,12 @@ import json
 from typing import Optional, List
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
+from adapters.llms._groq import _Groq
 from utils.swot_analysis import SWOTNewsAnalyzer
 from dotenv import load_dotenv
 from utils.helpers import (
     DocumentProcessor, analyze_company_async, external_company_intelligence, get_company_details, granular_strategic_analysis, 
-    merge_thresholds, micro_analysis_adjacency_matrix, perform_web_search, process_file_and_questions, perplexity_analysis
+    process_file_and_questions, perplexity_analysis
 )
 from utils.constants import * 
 from utils.schemas import *
@@ -59,6 +60,8 @@ analyzer = SWOTNewsAnalyzer(api_key=os.getenv("NEWSAPI_API_KEY", "d1b3658c875546
 # Initialize document processor
 document_processor = DocumentProcessor(openai_api_key=str(os.getenv("OPENAI_API_KEY")))
 
+
+groq_client = _Groq()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 @app.post("/analyze")
@@ -1441,28 +1444,24 @@ async def get_strategic_analysis(request_: StrategicAnalysisRequest, request: Re
         max_tokens=1000
     )
     consolidated_result = response.choices[0].message.content
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
+    response = groq_client.get_non_streaming_response(
+        payload = [
             {"role": "system", "content": strategic_analysis.system},
             {"role": "user", "content": strategic_analysis.user.format(questions = request_.questions,
                                                                        answers = request_.answers,
                                                                        consolidated_results = consolidated_result)}
-        ],
-        temperature=0.3,
-        max_tokens=3800
+        ]
     )
-    # try:
-    print(str(response.choices[0].message.content))
-    result = json.loads(str(response.choices[0].message.content))
-    return result
-    # except json.JSONDecodeError:
-    #     print(response.choices[0].message.content)
-    #     return {}
+    try:
+        result = json.loads(str(response.choices[0].message.content))
+        return result
+    except json.JSONDecodeError:
+        print(response.choices[0].message.content)
+        return {}
     
-    # except Exception as e:
-    #     print(e)
-    #     raise HTTPException(status_code=500, detail=f"Error analyzing question-answer pair: {str(e)}")
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail=f"Error analyzing question-answer pair: {str(e)}")
 
 
 @app.post("/strategic-analysis-with-file")

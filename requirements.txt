@@ -12,4 +12,5 @@ googlesearch-python
 requests 
 trafilatura
 openpyxl
+groq
 opencv-python
