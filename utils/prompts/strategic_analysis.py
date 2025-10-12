@@ -126,8 +126,7 @@ Create strategic analysis and return it in the following JSON format:
     "strategy_block": {
       "S_strategy": {
         "diagnostic": "string (brief phrase)",
-        "where_to_compete": ["string (geographies/segments/channels/products only)", "string (phrase)"],
-        "how_to_compete": ["string (phrase including competitive advantages)", "string (phrase)"]
+        "where_to_compete": [{"position": "geographies/segments/channels/products", "description": "how to compete"}],
       },
       "T_tactics": {
         "immediate_90_days": ["string (WHO & WHAT market partnerships only)"],
@@ -280,6 +279,12 @@ TO BE IN JSON AND NOTHING ELSE. NO BACKTICKS ``` OR ANYTHING
 I JUST NEED JSON OUTPUT AND THAT'S IT.
 IT IS VERY IMPERATIVE, THAT I GET VALID JSON ONLY AND NOTHING ELSE. 
 I WILL BE PARSING THE RESULT IN THE FRONTEND 
+
+-SOME RULES FOR BETTER OUTPUT  : 
+1. IN THE JSON, TRY PROVIDING AN IN-DEPTH INFORMATION ABOUT CULTURE PART IF YOU FIND IT IN THE CONSOLIDATED RESULTS 
+2. IN GOVERNANCE, I WOULD LIKE TO HAVE 2-3 KEY DECISIONS IF YOU COULD IDENTIFY THEM. SAME GOES FOR ANALYTICS AND TECHNOLOGY, IF THE DATA IS THERE, TRY TO BE MORE DESCRIPTIVE AROUND IT.
+3. SIMILARLY, I WOULD ALSO WANT THE RESOURCE SECTION TO BE A LITTLE DETAILED AS WELL. 
+4. ALSO, WHERE TO COMPETE SECTION CAN ALSO BE DETAILED OUT IF YOU HAVE THE INFORMATION.
 '''
 
 common_question = """
