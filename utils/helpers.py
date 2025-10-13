@@ -93,7 +93,7 @@ async def perplexity_analysis_async(system_prompt, user_prompt, citations_requir
     }
 
     # Increase timeout even more for slower API responses
-    timeout = httpx.Timeout(120.0, read=120.0, write=30.0, connect=30.0)
+    timeout = httpx.Timeout(120.0, read=120.0, write=30.0, connect=40.0)
 
     async with httpx.AsyncClient(timeout=timeout) as client:
         response = await client.post(url, headers=headers, json=payload)
