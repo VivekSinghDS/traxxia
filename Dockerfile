@@ -7,7 +7,6 @@ RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y && rm -rf /var/
 
 COPY requirements.txt ./requirements.txt
 RUN pip install -r requirements.txt 
-RUN pip install perplexityai
 USER appuser
 EXPOSE 8000
 COPY --chown=appuser:appuser . .
