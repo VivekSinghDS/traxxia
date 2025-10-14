@@ -21,11 +21,14 @@ from datetime import datetime, timedelta
 import asyncio
 import httpx
 from utils.prompts import core_adjacency_matrix, pestel, porter, strategic_analysis 
+from perplexity import Perplexity
 
 load_dotenv()
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+perplexity_client = Perplexity()
 
 import requests
 
@@ -78,39 +81,24 @@ def perplexity_analysis(system_prompt, user_prompt, citations_required = False):
 
 
 async def perplexity_analysis_async(system_prompt, user_prompt, citations_required=False):
-    url = "https://api.perplexity.ai/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {os.environ.get('PERPLEXITY_KEY')}",
-        "Content-Type": "application/json"
-    }
-
-    payload = {
-        "model": "sonar-pro",
-        "messages": [
+    response = perplexity_client.chat.completions.create(
+        messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
-        ]
-    }
-
-    # Increase timeout even more for slower API responses
-    timeout = httpx.Timeout(120.0, read=120.0, write=30.0, connect=40.0)
-
-    async with httpx.AsyncClient(timeout=timeout) as client:
-        response = await client.post(url, headers=headers, json=payload)
-        response.raise_for_status()  # Add this to catch HTTP errors
-        data = response.json()
+        ],
+        model="sonar-pro"
+    )
 
     if citations_required:
         citations = [
-            x for x in data.get("citations", [])
+            x for x in list(response.citations or [])
             if not any(y in x for y in [
                 'openai', 'github', 'langchain', 'source-is-not-valid-json',
                 'build5nines', 'jsonlint'
             ])
         ]
-        return data["choices"][0]['message']['content'], citations
-
-    return data["choices"][0]['message']['content']
+        return response.choices[0].message.content
+    return response.choices[0].message.content
 
 def get_newsapi_analysis(company_name: str):
     base_url = "https://newsapi.org/v2/everything"
@@ -1293,31 +1281,36 @@ async def get_company_details(questions, answers):
     }
     
 async def granular_strategic_analysis(questions, answers):
-    # Assuming you have async versions of your functions
-    tasks = [
-        perplexity_analysis_async(
-            system_prompt = strategic_analysis.forward_looking_intelligence_system, 
-            user_prompt=strategic_analysis.common_question.format(
-                questions = questions, 
-                answers = answers
-            )),
-        
-        perplexity_analysis_async(
-            system_prompt = strategic_analysis.risk_assessment, 
-            user_prompt=strategic_analysis.common_question.format(
-                questions = questions, 
-                answers = answers
-            )),
-        
-        perplexity_analysis_async(
-            system_prompt = strategic_analysis.market_intelligence_system, 
-            user_prompt=porter.common_question.format(
-                questions = questions, 
-                answers = answers
-            ))
-    ]
+    results = []
     
-    results = await asyncio.gather(*tasks)
+    # Process one at a time instead of concurrently
+    result1 = await perplexity_analysis_async(
+        system_prompt=strategic_analysis.forward_looking_intelligence_system, 
+        user_prompt=strategic_analysis.common_question.format(
+            questions=questions, 
+            answers=answers
+        )
+    )
+    results.append(result1)
+    
+    result2 = await perplexity_analysis_async(
+        system_prompt=strategic_analysis.risk_assessment, 
+        user_prompt=strategic_analysis.common_question.format(
+            questions=questions, 
+            answers=answers
+        )
+    )
+    results.append(result2)
+    
+    result3 = await perplexity_analysis_async(
+        system_prompt=strategic_analysis.market_intelligence_system, 
+        user_prompt=porter.common_question.format(
+            questions=questions, 
+            answers=answers
+        )
+    )
+    results.append(result3)
+    
     return {
         'forward_looking_intelligence': results[0],
         'risk_assessment': results[1],

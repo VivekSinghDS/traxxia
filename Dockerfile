@@ -7,9 +7,10 @@ RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y && rm -rf /var/
 
 COPY requirements.txt ./requirements.txt
 RUN pip install -r requirements.txt 
-
+RUN pip install perplexityai
 USER appuser
 EXPOSE 8000
 COPY --chown=appuser:appuser . .
 
-CMD ["uvicorn", "openai_analyzer:app", "--port", "8000", "--host", "0.0.0.0", "--no-access-log"]
+# CMD ["uvicorn", "openai_analyzer:app", "--port", "8000", "--host", "0.0.0.0", "--no-access-log"]
+CMD ["uvicorn", "openai_analyzer:app", "--port", "8000", "--host", "0.0.0.0", "--no-access-log", "--timeout-keep-alive", "300", "--timeout-graceful-shutdown", "30", "--limit-concurrency", "100", "--limit-max-requests", "1000"]
