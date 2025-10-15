@@ -55,11 +55,10 @@ def merge_thresholds(analysis: dict) -> dict:
     return result
 
 def perplexity_analysis(system_prompt, user_prompt, citations_required = False):
-    print(str(os.environ.get("PERPLEXITY_KEY")))
 # Set up the API endpoint and headers
     url = "https://api.perplexity.ai/chat/completions"
     headers = {
-        "Authorization": "Bearer "+str(os.environ.get("PERPLEXITY_KEY")),  # Replace with your actual API key
+        "Authorization": "Bearer "+str(os.environ.get("PERPLEXITY_API_KEY")),  # Replace with your actual API key
         "Content-Type": "application/json"
     }
 
@@ -72,6 +71,7 @@ def perplexity_analysis(system_prompt, user_prompt, citations_required = False):
     }
 
     response = requests.post(url, headers=headers, json=payload)
+    
     print(response.content)
     if citations_required:
         citations = response.json()['citations']

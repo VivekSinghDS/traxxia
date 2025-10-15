@@ -356,13 +356,14 @@ async def simple_swot_portfolio(request_: FullSwotPortfolioRequest, request: Req
                                                                     competitors = competitor_information)}
             ],
             temperature=0.3,
-            max_tokens=800
+            max_tokens=2800
         )
     stringified_json = str(response.choices[0].message.content).strip()
     try:
         result = json.loads(stringified_json)
         return result
     except json.JSONDecodeError:
+        print(stringified_json)
         return {}
     
     except Exception as e:
