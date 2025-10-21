@@ -24,11 +24,10 @@ from utils.prompts import core_adjacency_matrix, pestel, porter, strategic_analy
 from perplexity import Perplexity
 
 load_dotenv()
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-perplexity_client = Perplexity()
+perplexity_client = Perplexity(api_key = os.environ.get("PERPLEXITY_API_KEY"))
 
 import requests
 
@@ -54,7 +53,7 @@ def merge_thresholds(analysis: dict) -> dict:
 
     return result
 
-def perplexity_analysis(system_prompt, user_prompt, citations_required = False):
+def perplexity_analysis(system_prompt, user_prompt, citations_required = False, stream = False):
 # Set up the API endpoint and headers
     url = "https://api.perplexity.ai/chat/completions"
     headers = {
@@ -67,12 +66,12 @@ def perplexity_analysis(system_prompt, user_prompt, citations_required = False):
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
-        ]
+        ],
+        'stream' : stream
     }
 
     response = requests.post(url, headers=headers, json=payload)
     
-    print(response.content)
     if citations_required:
         citations = response.json()['citations']
         citations = [x for x in citations if not any(y in x for y in ['openai', 'github', 'langchain', 'source-is-not-valid-json', 'build5nines', 'jsonlint'])]

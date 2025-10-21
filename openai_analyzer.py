@@ -1,5 +1,6 @@
 from io import BytesIO
 from fastapi import FastAPI, HTTPException, Header, Request, UploadFile, File
+from fastapi.responses import StreamingResponse
 from openai import OpenAI
 import os
 import json
@@ -1547,19 +1548,29 @@ async def get_porter_analysis(request_: PorterAnalysisRequest, request: Request)
         result_query_3 = company_details['substitute_and_competitiveness']
     ),
                         porter.common_question.format(questions = request_.questions, answers = request_.answers))
-    porter_analysis = perplexity_analysis(
-        system_prompt = porter.system,
-        user_prompt = porter.user.format(
-            questions = request_.questions,
-            answers = request_.answers,
-            consolidated_data = consolidated_answer
-        )
-    )
     
-    return dict(json.loads(str(porter_analysis)))
-    # except Exception as e:
-        
-    #     raise HTTPException(status_code=500, detail=f"Error analyzing question-answer pair: {str(e)}")
+    response = groq_client.get_streaming_response(payload = [
+        {
+            "role": "system",
+            "content": porter.system,
+        },
+        {
+            "role": "user",
+            "content": porter.user.format(
+                questions = request_.questions,
+                answers = request_.answers,
+                consolidated_data = consolidated_answer
+            )
+        }
+    ])
+    def generate_stream():
+        for chunk in response:
+            content = chunk.choices[0].delta.content
+            if content:  # only yield non-empty strings
+                yield content
+                
+    return StreamingResponse(generate_stream(), media_type="text/plain")
+
 
 
 @app.post("/porter-analysis-with-file")
