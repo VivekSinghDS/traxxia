@@ -1383,7 +1383,7 @@ async def pestel_analysis(request_: PestelAnalysisRequest):
     Returns detailed PESTEL analysis with strategic implications and monitoring framework.
     """
     # try:
-    company_results = await analyze_company_async("Kasnet")
+    company_results = await analyze_company_async(str(request_.answers))
     consolidated_data = await external_company_intelligence(company_results)
 
     
