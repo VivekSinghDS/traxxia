@@ -369,7 +369,6 @@ async def simple_swot_portfolio(request_: FullSwotPortfolioRequest, request: Req
     return StreamingResponse(generate_stream(), media_type="text/plain")
     
 
-
 @app.post("/full-swot-portfolio-with-file")
 async def full_swot_portfolio_with_file(
     file: UploadFile = File(...),
@@ -439,21 +438,24 @@ async def get_channel_effectiveness(request: ChannelEffectivenessRequest):
     Returns enhanced channel effectiveness analysis with bubble chart data and differentiator alignment.
     """
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": channel_effectiveness.system},
-                {"role": "user", "content": channel_effectiveness.user.format(questions=request.questions, answers=request.answers)}
-            ],
-            temperature=0.3,
-            max_tokens=900
-        )
-        stringified_json = str(response.choices[0].message.content).strip()
-        try:
-            result = json.loads(stringified_json)
-            return result
-        except json.JSONDecodeError:
-            return {}
+        response = groq_client.get_streaming_response(payload = [
+            {
+                "role": "system",
+                "content":  channel_effectiveness.system,
+            },
+            {
+                "role": "user",
+                "content":channel_effectiveness.user.format(questions=request.questions, answers=request.answers)
+            }
+        ])
+
+        def generate_stream():
+            for chunk in response:
+                content = chunk.choices[0].delta.content
+                if content:  # only yield non-empty strings
+                    yield content
+                    
+        return StreamingResponse(generate_stream(), media_type="text/plain")
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error analyzing question-answer pair: {str(e)}")
