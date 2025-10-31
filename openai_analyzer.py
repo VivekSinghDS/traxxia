@@ -348,27 +348,25 @@ async def simple_swot_portfolio(request_: FullSwotPortfolioRequest, request: Req
         system_prompt=simple_swot.competitor_system, 
         user_prompt=simple_swot.user_prompt_competitor.format(questions = request_.questions, answers = request_.answers))
     
-    response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": simple_swot.system},
-                {"role": "user", "content":simple_swot.user.format(questions = request_.questions, 
+    response = groq_client.get_streaming_response(payload = [
+        {
+            "role": "system",
+            "content": simple_swot.system,
+        },
+        {
+            "role": "user",
+            "content":simple_swot.user.format(questions = request_.questions, 
                                                                     answers = request_.answers,
-                                                                    competitors = competitor_information)}
-            ],
-            temperature=0.3,
-            max_tokens=2800
-        )
-    stringified_json = str(response.choices[0].message.content).strip()
-    try:
-        result = json.loads(stringified_json)
-        return result
-    except json.JSONDecodeError:
-        print(stringified_json)
-        return {}
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error analyzing question-answer pair: {str(e)}")
+                                                                    competitors = competitor_information)
+        }
+    ])
+    def generate_stream():
+        for chunk in response:
+            content = chunk.choices[0].delta.content
+            if content:  # only yield non-empty strings
+                yield content
+                
+    return StreamingResponse(generate_stream(), media_type="text/plain")
     
 
 
