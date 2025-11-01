@@ -536,22 +536,25 @@ async def get_expanded_capability_heatmap(request: ExpandedCapabilityHeatmapRequ
     Returns comprehensive capability analysis with maturity distribution and gap analysis.
     """
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": expanded_capability_heatmap.system},
-                {"role": "user", "content": expanded_capability_heatmap.user.format(questions=request.questions, answers=request.answers)}
-            ],# INCOMPLETE_QA_PAYLOAD,
-            temperature=0.3,
-            max_tokens=1000
-        )
-        stringified_json = str(response.choices[0].message.content).strip()
-        try:
-            result = json.loads(stringified_json)
-            return result
-        except json.JSONDecodeError:
-            return {}
-    
+        response = groq_client.get_streaming_response(payload = [
+            {
+                "role": "system",
+                "content":  expanded_capability_heatmap.system,
+            },
+            {
+                "role": "user",
+                "content": expanded_capability_heatmap.user.format(questions=request.questions, answers=request.answers)
+            }
+        ])
+
+        def generate_stream():
+            for chunk in response:
+                content = chunk.choices[0].delta.content
+                if content:  # only yield non-empty strings
+                    yield content
+                    
+        return StreamingResponse(generate_stream(), media_type="text/plain")
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error analyzing question-answer pair: {str(e)}")
 
@@ -631,22 +634,25 @@ async def get_strategic_radar(request: StrategicRadarRequest):
     Returns strategic positioning analysis with recommendations and risk factors.
     """
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": strategic_radar.system},
-                {"role": "user", "content": strategic_radar.user.format(questions=request.questions, answers=request.answers)}
-            ],# INCOMPLETE_QA_PAYLOAD,
-            temperature=0.3,
-            max_tokens=800
-        )
-        # Try to parse the JSON response
-        stringified_json = str(response.choices[0].message.content).strip()
-        try:
-            result = json.loads(stringified_json)
-            return result
-        except json.JSONDecodeError:
-            return {}
+        response = groq_client.get_streaming_response(payload = [
+            {
+                "role": "system",
+                "content":  strategic_radar.system,
+            },
+            {
+                "role": "user",
+                "content": strategic_radar.user.format(questions=request.questions, answers=request.answers)
+            }
+        ])
+
+        def generate_stream():
+            for chunk in response:
+                content = chunk.choices[0].delta.content
+                if content:  # only yield non-empty strings
+                    yield content
+                    
+        return StreamingResponse(generate_stream(), media_type="text/plain")
+
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error analyzing question-answer pair: {str(e)}")
@@ -726,21 +732,25 @@ async def get_maturity_scoring(request: MaturityScoringRequest):
     Returns maturity assessment with benchmarking and progression recommendations.
     """
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": maturity_scoring.system},
-                {"role": "user", "content": maturity_scoring.user.format(questions=request.questions, answers=request.answers)}
-            ],
-            temperature=0.3,
-            max_tokens=1000
-        )
-        stringified_json = str(response.choices[0].message.content).strip()
-        try:
-            result = json.loads(stringified_json)
-            return result
-        except json.JSONDecodeError:
-            return {}
+        response = groq_client.get_streaming_response(payload = [
+            {
+                "role": "system",
+                "content":  maturity_scoring.system,
+            },
+            {
+                "role": "user",
+                "content": maturity_scoring.user.format(questions=request.questions, answers=request.answers)
+            }
+        ])
+
+        def generate_stream():
+            for chunk in response:
+                content = chunk.choices[0].delta.content
+                if content:  # only yield non-empty strings
+                    yield content
+                    
+        return StreamingResponse(generate_stream(), media_type="text/plain")
+        
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error analyzing question-answer pair: {str(e)}")
@@ -819,21 +829,24 @@ async def get_competitive_advantage(request: CompetitiveAdvantageRequest):
     Returns detailed competitive advantage analysis with differentiators and customer choice factors.
     """
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": competitive_advantage.system},
-                {"role": "user", "content": competitive_advantage.user.format(questions=request.questions, answers=request.answers)}
-            ],
-            temperature=0.3,
-            max_tokens=800
-        )
-        stringified_json = str(response.choices[0].message.content).strip()
-        try:
-            result = json.loads(stringified_json)
-            return result
-        except json.JSONDecodeError:
-            return {}
+        response = groq_client.get_streaming_response(payload = [
+            {
+                "role": "system",
+                "content":  competitive_advantage.system,
+            },
+            {
+                "role": "user",
+                "content": competitive_advantage.user.format(questions=request.questions, answers=request.answers)
+            }
+        ])
+        
+        def generate_stream():
+            for chunk in response:
+                content = chunk.choices[0].delta.content
+                if content:  # only yield non-empty strings
+                    yield content
+                    
+        return StreamingResponse(generate_stream(), media_type="text/plain")
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error analyzing question-answer pair: {str(e)}")
@@ -913,22 +926,24 @@ async def get_strategic_goals(request: StrategicGoalsRequest):
     Returns comprehensive OKR analysis with progress tracking and strategic alignment.
     """
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": strategic_goals.system},
-                {"role": "user", "content": strategic_goals.user.format(questions=request.questions, answers=request.answers)}
-            ],
-            temperature=0.3,
-            max_tokens=800
-        )
-        stringified_json = str(response.choices[0].message.content).strip()
-        try:
-            result = json.loads(stringified_json)
-            return result
-        except json.JSONDecodeError:
-            return {}
-    
+        response = groq_client.get_streaming_response(payload = [
+            {
+                "role": "system",
+                "content":  strategic_goals.system,
+            },
+            {
+                "role": "user",
+                "content": strategic_goals.user.format(questions=request.questions, answers=request.answers)
+            }
+        ])
+        
+        def generate_stream():
+            for chunk in response:
+                content = chunk.choices[0].delta.content
+                if content:  # only yield non-empty strings
+                    yield content
+                    
+        return StreamingResponse(generate_stream(), media_type="text/plain")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error analyzing question-answer pair: {str(e)}")
 
@@ -1101,21 +1116,25 @@ async def get_culture_profile(request: CultureProfileRequest):
     Returns comprehensive culture assessment with values, behaviors, and strategic alignment.
     """
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": culture_profile.system},
-                {"role": "user", "content": culture_profile.user.format(questions=request.questions, answers=request.answers)}
-            ],
-            temperature=0.3,
-            max_tokens=800
-        )
-        stringified_json = str(response.choices[0].message.content).strip()
-        try:
-            result = json.loads(stringified_json)
-            return result
-        except json.JSONDecodeError:
-            return {}
+        response = groq_client.get_streaming_response(payload = [
+            {
+                "role": "system",
+                "content":  culture_profile.system,
+            },
+            {
+                "role": "user",
+                "content": culture_profile.user.format(questions=request.questions, answers=request.answers)
+            }
+        ])
+        
+        def generate_stream():
+            for chunk in response:
+                content = chunk.choices[0].delta.content
+                if content:  # only yield non-empty strings
+                    yield content
+                    
+        return StreamingResponse(generate_stream(), media_type="text/plain")
+        
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error analyzing question-answer pair: {str(e)}")
@@ -1289,22 +1308,25 @@ async def get_maturity_score_light(request: MaturityScoreLightRequest):
     Returns comprehensive maturity analysis with overall score, components, and development roadmap.
     """
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": maturity_score.system},
-                {"role": "user", "content": maturity_score.user.format(questions=request.questions, answers=request.answers)}
-            ],
-            temperature=0.3,
-            max_tokens=800
-        )
-        stringified_json = str(response.choices[0].message.content).strip()
-        try:
-            result = json.loads(stringified_json)
-            return result
-        except json.JSONDecodeError:
-            return {}
-    
+        response = groq_client.get_streaming_response(payload = [
+            {
+                "role": "system",
+                "content":  maturity_score.system,
+            },
+            {
+                "role": "user",
+                "content": maturity_score.user.format(questions=request.questions, answers=request.answers)
+            }
+        ])
+        
+        def generate_stream():
+            for chunk in response:
+                content = chunk.choices[0].delta.content
+                if content:  # only yield non-empty strings
+                    yield content
+                    
+        return StreamingResponse(generate_stream(), media_type="text/plain")
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error analyzing question-answer pair: {str(e)}")
 
@@ -1432,6 +1454,7 @@ async def get_strategic_analysis(request_: StrategicAnalysisRequest, request: Re
     """
     # try:
     analysis = await granular_strategic_analysis(questions = request_.questions, answers = request_.answers)
+    
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
