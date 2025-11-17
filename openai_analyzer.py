@@ -1,7 +1,8 @@
 from io import BytesIO
 from fastapi import FastAPI, HTTPException, Header, Request, UploadFile, File
 from fastapi.responses import StreamingResponse
-from openai import OpenAI
+from langfuse.openai import OpenAI
+from langfuse import get_client, observe
 import os
 import json
 from typing import Optional, List
@@ -57,6 +58,22 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Langfuse middleware for session and user tracking
+langfuse = get_client()
+
+@app.middleware("http")
+async def add_langfuse_session(request: Request, call_next):
+    session_id = request.headers.get("X-Session-ID", f"session_{request.client.host}")
+    user_id = request.headers.get("X-User-ID", "anonymous")
+    # Store in request state for use in endpoints
+    request.state.session_id = session_id
+    request.state.user_id = user_id
+    request.state.endpoint = request.url.path
+    response = await call_next(request)
+    langfuse.flush()
+    return response
+
 analyzer = SWOTNewsAnalyzer(api_key=os.getenv("NEWSAPI_API_KEY", "d1b3658c875546baa970b0ff36887ac3")) 
 # Initialize document processor
 document_processor = DocumentProcessor(openai_api_key=str(os.getenv("OPENAI_API_KEY")))
@@ -65,8 +82,17 @@ document_processor = DocumentProcessor(openai_api_key=str(os.getenv("OPENAI_API_
 groq_client = _Groq()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+# Helper function to add Langfuse metadata to OpenAI calls
+def get_langfuse_metadata(endpoint: str, request: Request = None):
+    """Generate metadata for Langfuse tracking"""
+    metadata = {"endpoint": endpoint}
+    if request:
+        metadata["session_id"] = getattr(request.state, 'session_id', 'unknown')
+        metadata["user_id"] = getattr(request.state, 'user_id', 'anonymous')
+    return metadata
+
 @app.post("/analyze")
-async def analyze_qa(request_: AnalyzeRequest):
+async def analyze_qa(request_: AnalyzeRequest, request: Request):
     """
     Analyze a question-answer pair and provide validation feedback.
     Returns JSON with valid status and optional feedback.
@@ -79,7 +105,8 @@ async def analyze_qa(request_: AnalyzeRequest):
                 {"role": "user", "content": single_qa_analysis.user.format(question=request_.question, answer=request_.answer)}
             ],
             temperature=0.3,
-            max_tokens=200
+            max_tokens=200,
+            metadata=get_langfuse_metadata("/analyze", request)
         )
 
         stringified_json = str(response.choices[0].message.content).strip()
@@ -93,6 +120,7 @@ async def analyze_qa(request_: AnalyzeRequest):
         raise HTTPException(status_code=500, detail=f"Error analyzing question-answer pair: {str(e)}")
 
 @app.post("/analyze_all")
+@observe()
 async def analyze_all_qa(request: AnalyzeAllRequest):
     """
     Analyze a list of question-answer pairs and provide validation feedback.
@@ -1447,6 +1475,7 @@ async def get_core_adjacency_matrix(request: StrategicAnalysisRequest):
         return {}
 
 @app.post("/strategic-analysis")
+@observe()
 async def get_strategic_analysis(request_: StrategicAnalysisRequest, request: Request):
     """
     Create comprehensive strategic analysis using the STRATEGIC framework from questions and answers.
@@ -1466,7 +1495,8 @@ async def get_strategic_analysis(request_: StrategicAnalysisRequest, request: Re
             )}
         ],
         temperature=0.3,
-        max_tokens=1000
+        max_tokens=1000,
+        metadata=get_langfuse_metadata("/strategic-analysis", request)
     )
     consolidated_result = response.choices[0].message.content
     response = groq_client.get_non_streaming_response(
