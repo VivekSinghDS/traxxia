@@ -66,7 +66,6 @@ langfuse = get_client()
 async def add_langfuse_session(request: Request, call_next):
     session_id = request.headers.get("X-Session-ID", f"session_{request.client.host}")
     user_id = request.headers.get("X-User-ID", "anonymous")
-    # Store in request state for use in endpoints
     request.state.session_id = session_id
     request.state.user_id = user_id
     request.state.endpoint = request.url.path
@@ -92,6 +91,7 @@ def get_langfuse_metadata(endpoint: str, request: Request = None):
     return metadata
 
 @app.post("/analyze")
+@observe()
 async def analyze_qa(request_: AnalyzeRequest, request: Request):
     """
     Analyze a question-answer pair and provide validation feedback.
@@ -147,6 +147,7 @@ async def analyze_all_qa(request: AnalyzeAllRequest):
         raise HTTPException(status_code=500, detail=f"Error analyzing question-answer pair: {str(e)}")
 
 @app.post("/find")
+@observe()
 async def competitor_finding(request: AnalyzeAllRequest):
     """
     Find competitors for a given product.
@@ -193,6 +194,7 @@ async def competitor_finding(request: AnalyzeAllRequest):
         raise HTTPException(status_code=500, detail=f"Error finding competitors: {str(e)}")
 
 @app.post("/customer-segment")
+@observe()
 async def get_customer_segmentation(request: CustomerSegmentationRequest):
     try:
         response = client.chat.completions.create(
@@ -215,6 +217,7 @@ async def get_customer_segmentation(request: CustomerSegmentationRequest):
         raise HTTPException(status_code=500, detail=f"Error analyzing question-answer pair: {str(e)}")
 
 @app.post("/purchase-criteria")
+@observe()
 async def purchase_criteria_matrix(request: PurchaseCriteriaRequest):
 
     try:
@@ -238,6 +241,7 @@ async def purchase_criteria_matrix(request: PurchaseCriteriaRequest):
         raise HTTPException(status_code=500, detail=f"Error analyzing question-answer pair: {str(e)}")
 
 @app.post("/channel-heatmap")
+@observe()
 async def get_channel_heatmap(request: ChannelHeatmapRequest):
     """
     Analyze channel heatmap from Q5 and Q3 answers.
@@ -264,6 +268,7 @@ async def get_channel_heatmap(request: ChannelHeatmapRequest):
         raise HTTPException(status_code=500, detail=f"Error analyzing question-answer pair: {str(e)}")
 
 @app.post("/loyalty-metrics")
+@observe()
 async def get_loyalty_metrics(request: LoyaltyMetricsRequest):
     """
     Analyze loyalty/NPS metrics from Q6 and Q3 answers.
@@ -291,6 +296,7 @@ async def get_loyalty_metrics(request: LoyaltyMetricsRequest):
         raise HTTPException(status_code=500, detail=f"Error analyzing question-answer pair: {str(e)}")
 
 @app.post("/capability-heatmap")
+@observe()
 async def get_capability_heatmap(request: CapabilityHeatmapRequest):
     """
     Analyze capability heatmap from Q7 and Q4 answers.
@@ -349,6 +355,7 @@ async def upload_and_analyze(file: UploadFile = File(...), questions: Optional[L
     )
 
 @app.post("/full-swot-portfolio")
+@observe()
 async def full_swot_portfolio(request_: FullSwotPortfolioRequest, request: Request):
     """
     Create comprehensive SWOT portfolio analysis from all questions and answers.
@@ -366,6 +373,7 @@ async def full_swot_portfolio(request_: FullSwotPortfolioRequest, request: Reque
     return result
     
 @app.post("/simple-swot-portfolio")
+@observe()
 async def simple_swot_portfolio(request_: FullSwotPortfolioRequest, request: Request):
     """
     Create comprehensive SWOT portfolio analysis from all questions and answers.
@@ -398,6 +406,7 @@ async def simple_swot_portfolio(request_: FullSwotPortfolioRequest, request: Req
     
 
 @app.post("/full-swot-portfolio-with-file")
+@observe()
 async def full_swot_portfolio_with_file(
     file: UploadFile = File(...),
     questions: Optional[List[str]] = None,
@@ -490,6 +499,7 @@ async def get_channel_effectiveness(request: ChannelEffectivenessRequest):
 
 
 @app.post("/channel-effectiveness-with-file")
+@observe()
 async def channel_effectiveness_with_file(
     file: UploadFile = File(...),
     questions: Optional[List[str]] = None,
@@ -558,6 +568,7 @@ async def channel_effectiveness_with_file(
         raise HTTPException(status_code=500, detail=f"Error analyzing channel effectiveness with file: {str(e)}")
 
 @app.post("/expanded-capability-heatmap")
+@observe()
 async def get_expanded_capability_heatmap(request: ExpandedCapabilityHeatmapRequest):
     """
     Create expanded capability heatmap with business functions vs capability maturity analysis.
@@ -656,6 +667,7 @@ async def expanded_capability_heatmap_with_file(
         raise HTTPException(status_code=500, detail=f"Error analyzing expanded capability heatmap with file: {str(e)}")
 
 @app.post("/strategic-radar")
+@observe()
 async def get_strategic_radar(request: StrategicRadarRequest):
     """
     Create strategic radar assessment with multi-dimensional analysis.
@@ -687,6 +699,7 @@ async def get_strategic_radar(request: StrategicRadarRequest):
 
 
 @app.post("/strategic-radar-with-file")
+@observe()
 async def strategic_radar_with_file(
     file: UploadFile = File(...),
     questions: Optional[List[str]] = None,
@@ -754,6 +767,7 @@ async def strategic_radar_with_file(
         raise HTTPException(status_code=500, detail=f"Error analyzing strategic radar with file: {str(e)}")
 
 @app.post("/maturity-scoring")
+@observe()
 async def get_maturity_scoring(request: MaturityScoringRequest):
     """
     Create comprehensive maturity scoring with cross-dimensional analysis.
@@ -851,6 +865,7 @@ async def maturity_scoring_with_file(
     #     raise HTTPException(status_code=500, detail=f"Error analyzing maturity scoring with file: {str(e)}")
 
 @app.post("/competitive-advantage")
+@observe()
 async def get_competitive_advantage(request: CompetitiveAdvantageRequest):
     """
     Create competitive advantage matrix analysis from Q8 and Q4 answers.
@@ -948,6 +963,7 @@ async def competitive_advantage_with_file(
         raise HTTPException(status_code=500, detail=f"Error analyzing competitive advantage with file: {str(e)}")
 
 @app.post("/strategic-goals")
+@observe()
 async def get_strategic_goals(request: StrategicGoalsRequest):
     """
     Create strategic goals and OKR analysis from Q9 and Q2 answers.
@@ -1044,6 +1060,7 @@ async def strategic_goals_with_file(
         raise HTTPException(status_code=500, detail=f"Error analyzing strategic goals with file: {str(e)}")
 
 @app.post("/strategic-positioning-radar")
+@observe()
 async def get_strategic_positioning_radar(request: StrategicPositioningRadarRequest):
     """
     Create strategic positioning radar analysis from Q8, Q2, Q4, and Q13 answers.
@@ -1071,6 +1088,7 @@ async def get_strategic_positioning_radar(request: StrategicPositioningRadarRequ
 
 
 @app.post("/strategic-positioning-radar-with-file")
+@observe()
 async def strategic_positioning_radar_with_file(
     file: UploadFile = File(...),
     questions: Optional[List[str]] = None,
@@ -1169,6 +1187,7 @@ async def get_culture_profile(request: CultureProfileRequest):
 
 
 @app.post("/culture-profile-with-file")
+@observe()
 async def culture_profile_with_file(
     file: UploadFile = File(...),
     questions: Optional[List[str]] = None,
@@ -1236,6 +1255,7 @@ async def culture_profile_with_file(
         raise HTTPException(status_code=500, detail=f"Error analyzing culture profile with file: {str(e)}")
 
 @app.post("/productivity-metrics")
+@observe()
 async def get_productivity_metrics(request: ProductivityMetricsRequest):
     """
     Create productivity and efficiency metrics analysis from Q14, Q11, and Q12 answers.
@@ -1263,6 +1283,7 @@ async def get_productivity_metrics(request: ProductivityMetricsRequest):
 
 
 @app.post("/productivity-metrics-with-file")
+@observe()
 async def productivity_metrics_with_file(
     file: UploadFile = File(...),
     questions: Optional[List[str]] = None,
@@ -1330,6 +1351,7 @@ async def productivity_metrics_with_file(
         raise HTTPException(status_code=500, detail=f"Error analyzing productivity metrics with file: {str(e)}")
 
 @app.post("/maturity-score-light")
+@observe()
 async def get_maturity_score_light(request: MaturityScoreLightRequest):
     """
     Create maturity score (light) analysis synthesizing all Q1-Q14 assessments.
@@ -1360,6 +1382,7 @@ async def get_maturity_score_light(request: MaturityScoreLightRequest):
 
 
 @app.post("/maturity-score-light-with-file")
+@observe()
 async def maturity_score_light_with_file(
     file: UploadFile = File(...),
     questions: Optional[List[str]] = None,
@@ -1427,6 +1450,7 @@ async def maturity_score_light_with_file(
         raise HTTPException(status_code=500, detail=f"Error analyzing maturity score light with file: {str(e)}")
 
 @app.post("/pestel-analysis")
+@observe()
 async def pestel_analysis(request_: PestelAnalysisRequest):
     """
     Create comprehensive PESTEL analysis from questions and answers.
@@ -1455,6 +1479,7 @@ async def pestel_analysis(request_: PestelAnalysisRequest):
 
 
 @app.post("/core-adjacency-matrix")
+@observe()
 async def get_core_adjacency_matrix(request: StrategicAnalysisRequest):
     response = client.chat.completions.create(
             model="gpt-4o",
@@ -1520,6 +1545,7 @@ async def get_strategic_analysis(request_: StrategicAnalysisRequest, request: Re
 
 
 @app.post("/strategic-analysis-with-file")
+@observe()
 async def strategic_analysis_with_file(
     file: UploadFile = File(...),
     questions: Optional[List[str]] = None,
@@ -1588,6 +1614,7 @@ async def strategic_analysis_with_file(
         raise HTTPException(status_code=500, detail=f"Error analyzing strategic analysis with file: {str(e)}")
 
 @app.post("/porter-analysis")
+@observe()
 async def get_porter_analysis(request_: PorterAnalysisRequest, request: Request):
     """
     Create comprehensive Porter's Five Forces analysis from questions and answers.
@@ -1627,6 +1654,7 @@ async def get_porter_analysis(request_: PorterAnalysisRequest, request: Request)
 
 
 @app.post("/porter-analysis-with-file")
+@observe()
 async def porter_analysis_with_file(
     file: UploadFile = File(...),
     questions: Optional[List[str]] = None,
