@@ -16,3 +16,4 @@ groq
 opencv-python
 httpx
 perplexityai
+langfuse
