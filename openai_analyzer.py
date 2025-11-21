@@ -66,7 +66,6 @@ langfuse = get_client()
 async def add_langfuse_session(request: Request, call_next):
     session_id = request.headers.get("X-Session-ID", f"session_{request.client.host}")
     user_id = request.headers.get("X-User-ID", "anonymous")
-    # Store in request state for use in endpoints
     request.state.session_id = session_id
     request.state.user_id = user_id
     request.state.endpoint = request.url.path
